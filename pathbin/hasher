@@ -1,0 +1,7 @@
+#!/usr/bin/python2.7
+# -*- coding: utf-8 -*-
+
+import hashlib
+import getpass
+
+print hashlib.md5(getpass.getpass('word : ')).hexdigest()

@@ -1,0 +1,57 @@
+#!/usr/bin/python2.7
+# -*- coding: utf-8 -*-
+
+import sys
+import math
+import string
+
+def safe(c):
+  if c > 0x1f and c < 0x7f:
+    return chr(c)
+  return '.'
+def anafreq(data):
+  r = list([0]*0x100)
+  for i in data:
+    r[ord(i)] += 1
+  return r
+
+def colorize(number,maxi):
+  colgrad = [0,4,6,2,3,1]
+  u = str(colgrad[int(5 * (float(number) / float(maxi)))])
+  return '\x1b[3'+u+'m'+str(number)+'\x1b[0m'
+
+def coolformat(array):
+  maxi = max(array)
+  maxwidth = int(math.log(maxi,10))+1
+  r = ''
+  for line in xrange(0,0x100,0x10):
+    r += hex(0x100+line)[-2:]
+    for column in xrange(0x10):
+      curchar = line+column
+      val = array[curchar]
+      if val == 0:
+        r += ' '*(maxwidth+2)
+      else:
+        r += ' '+(maxwidth-len(str(val)))*' '+colorize(val,maxi)+''+safe(curchar)
+    r += "\n"
+  return r
+
+def main():
+  # check arg
+  if len(sys.argv) != 2:
+    return None
+
+  # load data
+  with open(sys.argv[1],'r') as o:
+    data = o.read()
+    o.close()
+  
+  # count
+  c = anafreq(data)
+
+  # print
+  print coolformat(c)
+  
+
+if __name__ == "__main__":
+  main()

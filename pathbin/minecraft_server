@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /home/antoine/.games/minecraft
+java -jar /home/antoine/.games/minecraft/minecraft_server.jar

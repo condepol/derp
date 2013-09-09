@@ -1,0 +1,26 @@
+#!/usr/bin/python2.7
+# -*- coding: utf-8 -*-
+
+def safe(c):
+  if c > 0x1f and c < 0x7f:
+    return chr(c)
+  return '.'
+
+def table_ascii():
+  return '  '+' '.join([hex(i)[2] for i in xrange(0x10)])+"\n"+"\n".join([str(j/16)+" "+' '.join([safe(i+j) for i in xrange(0x10)]) for j in xrange(0x20,0x80,0x10)])
+
+def table_color():
+  return "\x1b[0m\n".join(['\x1b[0m '.join(['\x1b[3'+str(fg)+';4'+str(bg)+'m'+str(fg)+str(bg) for fg in xrange(9)]) for bg in xrange(9) ])+"\x1b[0m"
+
+def mergeblocks(a,b):
+  a = a.splitlines()
+  b = b.splitlines()
+  while len(a) < len(b):
+    a.append(" "*len(a[0]))
+  while len(a) > len(b):
+    b.append(" "*len(b[0]))
+
+  return '\n'.join(['\t'.join([a[i],b[i]]) for i in xrange(len(b))])
+
+
+print mergeblocks(table_ascii(), table_color())

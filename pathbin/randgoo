@@ -1,0 +1,2 @@
+#!/bin/bash
+firefox -new-tab 'http://google.com/search?q='`python -c 'import random;print hex(random.randrange(0x100000000))[2:]'`' -md5 -hash'
