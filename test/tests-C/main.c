@@ -18,5 +18,10 @@ int main (int argc, char * argv[] )
   errno = 0;
   perror("derp");
   
+  char * z = "azertyuio";
+  printf("%s\n",z);  
+  z[5] = 't';
+  printf("%s\n",z);  
+
   return EXIT_SUCCESS;
 }
