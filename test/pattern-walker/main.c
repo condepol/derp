@@ -34,12 +34,16 @@ typedef struct {
   unsigned int charset_length;
 } known_charset;
 
-# define KNOWN_CHARSETS 4
+# define KNOWN_CHARSETS 8
 known_charset dico [] = {
   {"ascii"," !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",95},
   {"digits","0123456789",10},
+  {"letters","azertyuiopqsdfghjklmwxcvbn",26},
+  {"LETTERS","AZERTYUIOPQSDFGHJKLMWXCVBN",26},
+  {"Letters","azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN",52},
   {"hexa","0123456789abcdef",16},
-  {"HEXA","0123456789ABCDEF",16}
+  {"HEXA","0123456789ABCDEF",16},
+  {"symbols"," !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",34}
 };
 
 int match_known_charset(char * name,unsigned int * charset_length, char ** charset)
@@ -70,6 +74,11 @@ int main (int argc, char * argv[])
   if ((argc < 3 )||(argc > 4))
   {
     printf("Usage : %s <charset> <length> [prefix]\n",argv[0]);
+    puts("Charsets :");
+    for (length=0;length<KNOWN_CHARSETS;length++)
+    {
+      printf("%10s «%s»\n",dico[length].name,dico[length].charset);
+    }
     return EXIT_FAILURE;
   }
   if (match_known_charset(argv[1],&charset_length,&charset) == EXIT_FAILURE)
