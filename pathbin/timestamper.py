@@ -8,7 +8,7 @@ def iscool(b):
 def issupercool(b):
   return (sum(1*(ord('A')<j and j<ord('z')) for j in b) == len(b))
 
-if len(sys.argv) == 0:
+if len(sys.argv) == 1:
   print(time.ctime(struct.unpack('>I',sys.stdin.read(4))[0]))
 else:
   t = time.time()

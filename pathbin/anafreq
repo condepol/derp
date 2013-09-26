@@ -38,19 +38,25 @@ def coolformat(array):
 
 def main():
   # check arg
-  if len(sys.argv) != 2:
+  if len(sys.argv) not in [1,2]:
     return None
 
-  # load data
-  with open(sys.argv[1],'r') as o:
-    data = o.read()
-    o.close()
-  
-  # count
-  c = anafreq(data)
-
-  # print
-  print coolformat(c)
+  if len(sys.argv) == 2:
+    # load data
+    with open(sys.argv[1],'r') as o:
+      data = o.read()
+      o.close()
+  else:
+    # load data
+    data = sys.stdin.read()
+ 
+  if data != str():
+    # count
+    c = anafreq(data)
+    # print
+    print coolformat(c)
+  else:
+    print "No data."
   
 
 if __name__ == "__main__":
