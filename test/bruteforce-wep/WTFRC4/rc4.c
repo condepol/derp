@@ -30,6 +30,5 @@ unsigned char rc4_byte(rc4_state * state)
   tmp = state->buffer[state->i ] ;
   state->buffer [ state->i ]  = state->buffer [ state->j ] ;
   state->buffer [ state->j ]  = tmp;
-  printf("%02x",state->buffer [ (state->buffer [ state->i ] +state->buffer [ state->j ] ) ] );
   return state->buffer [ (state->buffer [ state->i ] +state->buffer [ state->j ] ) ] ;
 }

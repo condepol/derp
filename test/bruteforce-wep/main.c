@@ -5,79 +5,58 @@
 # include <stdlib.h>
 # include <unistd.h>
 
-# include "moar_ivs.c"
-# include "rc4.c"
-
-# define IV_NUMBER 111
-
 typedef struct {
   unsigned char iv [3];
   unsigned char key_index;
   unsigned char * data;
   unsigned int data_length;
-  unsigned char crc [4];
+  unsigned char * crc;
 } wep_packet;
 
-typedef struct {
-  /* 40 bits = 5 octets */
-  unsigned char k[5];
-} wep_key;
+# include "rc4.c"
+# include "crc32.c"
+# include "printers.c"
+# include "reader.c"
+# include "cracker.c"
+//# include "ivs_2.c"
+# include "yolo.c"
 
-wep_packet read_packet (const unsigned char * buffer, unsigned int length)
-{
-  wep_packet output;
-  memcpy(output.iv,&buffer[24],3);
-  output.key_index = buffer[27]>>6;/* throw the 6 padding bits */
-  output.data_length = length-32;
-  output.data = malloc(output.data_length);
-  memcpy(output.data,&buffer[28],output.data_length);
-  memcpy(output.crc,&buffer[length-4],4);
-  return output;
-}
-
-char * str_packet(wep_packet p)
-{
-  char * output = NULL;
-  /*
-  printf("%20s : %d data bytes\n","Wep packet",p.data_length);
-  printf("%20s : %02x%02x%02x\n","IV",p.iv[0],p.iv[1],p.iv[2]);
-  printf("%20s : %x\n","Key index",p.key_index);
-  printf("%20s : %02x%02x%02x%02x\n","CRC",p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
-  */
-  output = malloc(21);
-  sprintf(output,"%02x%02x%02x%2x %3d %02x%02x%02x%02x",p.iv[0],p.iv[1],p.iv[2],p.key_index,p.data_length,p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
-  return output;
-}
-
-int check_key(wep_key key,wep_packet p)
-{
-  unsigned char K [8];
-  unsigned char mcrc [4];
-  unsigned char pcrc [4];
-  unsigned char * B = NULL;
-  /* create key */
-  memcpy(K,key.k,5);
-  memcpy(&K[5],p.iv,3);
-  /* init ARC4 buffer */
-  B = init_buffer(unsigned char * key, 8)/* 8 = 64bit wep / sizeof(uchar) */
-  /* decipher data */
-
-  /* decipher p.crc in PCRC */
-
-  /* compute MCRC */
-
-  /* compare MCRC and PCRC */
-  return memcmp(pcrc,mcrc,4);
-}
 int main(int argc, char * argv[])
 {
   unsigned int i = 0;
+  wireshark_dico buffers;
   wep_packet * packets = NULL;
-  packets = malloc(IV_NUMBER*sizeof(wep_packet));
-  for (i=0;i<IV_NUMBER;i++)
+  unsigned char * key = NULL;
+
+  key = malloc(5*sizeof(unsigned char));
+  memset(key,0,5*sizeof(unsigned char));
+  memcpy(key,(unsigned char *)"\x61\x61\x10\x14\x53",5);
+
+
+  /* 1. read packets */ 
+  buffers = load_packets();
+  packets = malloc(buffers.length*sizeof(wep_packet));
+  for (i=0;i<buffers.length;i++)
   {
-    packets[i] = read_packet(pkts[i],82);
-    /*printf("Packet %4d : %s\n",i,str_packet(packets[i]));*/
+    packets[i] = read_packet(buffers.packets[i].data,buffers.packets[i].length);
   }
+
+  /* 2. try keys */
+  for (i=0;i<buffers.length;i++)
+  {
+    print_packet(packets[i]);
+    printf("Packet %d, key %s : %d\n",i,hexa(key,5),check_key(key,packets[i]));
+  }
+
+
+  /* 3. free memory */
+  for (i=0;i<buffers.length;i++)
+  {
+    free(packets[i].data);
+  }
+  free(packets);
+  free(key);
+
+
   return EXIT_SUCCESS;
 }
