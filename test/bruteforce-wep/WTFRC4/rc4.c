@@ -30,5 +30,5 @@ unsigned char rc4_byte(rc4_state * state)
   tmp = state->buffer[state->i ] ;
   state->buffer [ state->i ]  = state->buffer [ state->j ] ;
   state->buffer [ state->j ]  = tmp;
-  return state->buffer [ (state->buffer [ state->i ] +state->buffer [ state->j ] ) ] ;
+  return state->buffer [(unsigned char)(state->buffer [ state->i ] +state->buffer [ state->j ] )] ;
 }

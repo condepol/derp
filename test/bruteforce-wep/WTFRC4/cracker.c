@@ -17,6 +17,6 @@ void check_key(unsigned char * key)
   B = init_buffer(K, 8);/* 8 = 64bit wep / sizeof(uchar) */
   state->buffer = B;
 
-  for (i=0;i<512;i++){printf("%c",rc4_byte(state));}
+  for (i=0;i<512;i++){printf("%c",(rc4_byte(state)));}
   free(B);
 }
