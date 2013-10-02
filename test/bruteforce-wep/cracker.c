@@ -18,7 +18,7 @@ int check_key(unsigned char * key,wep_packet p)
   /* result */
   unsigned int result;
 
-  printbuffer(p.data,p.data_length-4);
+  //printbuffer(p.data,p.data_length-4);
   /* create key for 64 bit wep :*/
   memcpy(K,p.iv,3);       /* 24 public bits */
   memcpy(&K[3],key,5);    /* 40 secret bits */
@@ -31,9 +31,15 @@ int check_key(unsigned char * key,wep_packet p)
     if (cleartext == NULL){sleep(0.2);}
   }
 
+
+
+
+
+
   /* init ARC4 buffer */
   B = init_buffer(K, 8);/* 8 = 64bit wep / sizeof(uchar) */
   state.buffer = B;
+
   /* init crc */
   crc = 0xffffffffU;
 
@@ -51,9 +57,21 @@ int check_key(unsigned char * key,wep_packet p)
     /* decipher byte */
     p.data[i] ^= rc4_byte(&state);
   }
+
   /* finalize crc */
   crc ^= 0xffffffffU;
+
+
+
+
+
   /* compare MCRC and PCRC */
+  /*
+    todo
+      - try to compute crc32 with a table that puts bytes in reverse order.
+      - cast p.crc to int in order to compare with something like
+        ((unsigned int)p.crc) != crc
+  */
   if (p.crc[0] == (unsigned char)(crc>>0)) {
     if (p.crc[1] == (unsigned char)(crc>>8)) {
       if (p.crc[2] == (unsigned char)(crc>>16)) {
@@ -66,12 +84,26 @@ int check_key(unsigned char * key,wep_packet p)
 
   //result = memcmp(p.crc,&crc,4);
 
-  printf("\nCRC %08x == %x%x%x%x\n",crc,p.crc[3],p.crc[2],p.crc[1],p.crc[0]);
 
-  printbuffer(p.data,p.data_length-4);
+
+
+
+  //printf("\nCRC %08x == %x%x%x%x\n",crc,p.crc[3],p.crc[2],p.crc[1],p.crc[0]);
+  //printbuffer(p.data,p.data_length-4);
 
   free(state.buffer);
   free(cleartext);
   return result;
 }
 
+
+
+unsigned int update_key(unsigned char * key,unsigned int len)
+{
+  unsigned int i = 0;
+  while (key[i++] == 0xff && i<len) {}
+  if (i == len) {return 0;}
+  i--;
+  while (i+1){key[i--]++;}
+  return 1;
+}

@@ -23,7 +23,7 @@ void print_packet(wep_packet p)
   printf("%20s : %x\n","Key index",p.key_index);
   printf("%20s : %02x%02x%02x%02x\n","CRC",p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
   */
-  printf("Packet \x1b[33mIV:%02x%02x%02x\x1b[36m%2x\x1b[30m %3d \x1b[32mCRC:%02x%02x%02x%02x\x1b[30m\n",p.iv[0],p.iv[1],p.iv[2],p.key_index,p.data_length,p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
+  printf("Packet \x1b[33mIV:%02x%02x%02x\x1b[36m%2x\x1b[30m %3d \x1b[32mCRC:%02x%02x%02x%02x\x1b[0m\n",p.iv[0],p.iv[1],p.iv[2],p.key_index,p.data_length,p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
 }
 
 
