@@ -1,3 +1,6 @@
+# define CRC_CORRECT 1
+# define CRC_INVALID 0
+
 int check_key(unsigned char * key,wep_packet p)
 {
   /* ARC4 Key = ( secret_key || iv_key ) */
@@ -15,10 +18,10 @@ int check_key(unsigned char * key,wep_packet p)
   /* result */
   unsigned int result;
 
-  printbuffer(p.data,p.data_length);
+  printbuffer(p.data,p.data_length-4);
   /* create key for 64 bit wep :*/
-  memcpy(K,key,5);    /* 40 secret bits */
-  memcpy(&K[5],p.iv,3); /* 24 public bits */
+  memcpy(K,p.iv,3);       /* 24 public bits */
+  memcpy(&K[3],key,5);    /* 40 secret bits */
 
   /* allocate memory for deciphered data */
   while (cleartext == NULL)
@@ -33,24 +36,39 @@ int check_key(unsigned char * key,wep_packet p)
   state.buffer = B;
   /* init crc */
   crc = 0xffffffffU;
-  crc = crc ^ ~0U;
 
-  /* for each (data||crc) byte */
-  for (i=0;i<p.data_length;i++)
+  /* for each (data) byte */
+  for (i=0;i<p.data_length-4;i++)
   {
     /* decipher byte */
     p.data[i] ^= rc4_byte(&state);
     /* update crc */
     crc = crc32_tab[(crc ^ p.data[i]) & 0xFF] ^ (crc >> 8);
   }
+  /* for each crc byte */
+  for (;i<p.data_length;i++)
+  {
+    /* decipher byte */
+    p.data[i] ^= rc4_byte(&state);
+  }
   /* finalize crc */
   crc ^= 0xffffffffU;
   /* compare MCRC and PCRC */
-  result = memcmp(p.crc,&crc,4);
+  if (p.crc[0] == (unsigned char)(crc>>0)) {
+    if (p.crc[1] == (unsigned char)(crc>>8)) {
+      if (p.crc[2] == (unsigned char)(crc>>16)) {
+        if (p.crc[3] == (unsigned char)(crc>>24)) {
+          result = CRC_CORRECT;
+        } else {result = CRC_INVALID;}
+      } else {result = CRC_INVALID;}
+    } else {result = CRC_INVALID;}
+  } else {result = CRC_INVALID;}
 
-  printf("\nCRC %08x == %x%x%x%x\n",crc,p.crc[0],p.crc[1],p.crc[2],p.crc[3]);
+  //result = memcmp(p.crc,&crc,4);
 
-  printbuffer(p.data,p.data_length);
+  printf("\nCRC %08x == %x%x%x%x\n",crc,p.crc[3],p.crc[2],p.crc[1],p.crc[0]);
+
+  printbuffer(p.data,p.data_length-4);
 
   free(state.buffer);
   free(cleartext);

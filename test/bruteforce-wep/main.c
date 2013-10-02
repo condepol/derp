@@ -18,8 +18,8 @@ typedef struct {
 # include "printers.c"
 # include "reader.c"
 # include "cracker.c"
-//# include "ivs_2.c"
-# include "yolo.c"
+# include "ivs_2.c"
+//# include "yolo.c"
 
 int main(int argc, char * argv[])
 {
