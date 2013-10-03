@@ -32,10 +32,6 @@ int check_key(unsigned char * key,wep_packet p)
   }
 
 
-
-
-
-
   /* init ARC4 buffer */
   B = init_buffer(K, 8);/* 8 = 64bit wep / sizeof(uchar) */
   state.buffer = B;
