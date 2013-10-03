@@ -13,7 +13,7 @@
 # include "printers.c"
 # include "cracker.c"
 
-# include "ivs-known-8.c"
+# include "../ivs/ivs-known-8.c"
 
 int main(int argc, char * argv[])
 {
