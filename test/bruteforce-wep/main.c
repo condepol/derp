@@ -28,8 +28,8 @@ int main(int argc, char * argv[])
   key = malloc(5*sizeof(unsigned char));
   memset(key,0,5*sizeof(unsigned char));
   //memcpy(key,(unsigned char *)"\x61\x61\x10\x14\x53",5);
-  //memcpy(key,(unsigned char *)"\x60\x60\x10\x14\x53",5);
-  memset(key,0,5);
+  memcpy(key,(unsigned char *)"\x60\x60\x10\x14\x53",5);
+  //memset(key,0,5);
 
 
   /* 1. read packets */ 

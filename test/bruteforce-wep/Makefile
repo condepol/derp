@@ -6,4 +6,4 @@ execute: compile
 
 compile: main.c
 	clear
-	gcc -Werror -Wall -ansi -pedantic -std=c99 ${m} -o ${e}
+	gcc -Werror -Wall -ansi -pedantic -std=c99 ${m} -o ${e} -O3
