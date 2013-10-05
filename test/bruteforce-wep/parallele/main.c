@@ -6,6 +6,8 @@
 # include <stdlib.h>
 # include <unistd.h>
 
+# include <pthread.h>
+
 # include "wep_utils.c"
 
 # include "rc4.c"
@@ -15,9 +17,93 @@
 
 # include "../ivs/ivs-known-8.c"
 
+# define NB_THREADS 4
+pthread_t thread[NB_THREADS];
+
+# define KEY_SIZE 5
+
+typedef struct {
+  unsigned char * key;
+  wep_packet packet;
+} thread_data;
+
+typedef struct {
+  unsigned int nb_keys;
+  unsigned char ** keys;
+} thread_result;
+
+void * bruteforce (void * input_struct)
+{
+  unsigned int my_id = 0; 
+  thread_result result;
+  thread_data data = (thread_data) input_struct;
+  wep_packet packet;
+
+  /* get self id */
+  for (i = 0; i < NB_THREADS; i++) {
+    if (thread[i] == pthread_self()) {
+      my_id = i;
+    }
+  }
+  /* set thread cancel type */
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  /* malloc result buffer */
+  result.keys = malloc(10*sizeof(unsigned char *));
+  for (i=0;i<10;i++) {
+    result.keys[i] = malloc(KEY_SIZE);
+  }
+  result.nb_keys = 0;
+  
+  tmp_packet = copy_packet(&data.packet);
+  
+  /* do evil stuff */
+
+  /* check the null key */
+  if (check_key(key,tmp_packet))
+  {
+    /* store key */
+    //printf("%s\n",hexa(key,5));
+  }
+  /* reload data */
+  recopy_packet(&packets[0],&tmp_packet);
+
+  /* update only 3 bytes, the 2 others have 65535 different threads (or program instances) */
+  while (update_key(key,3)) /* returns 0 at overflow */
+  {
+    if (check_key(key,tmp_packet))
+    {
+      /* if needed, realloc */
+      if ((result.nb_keys % 10) == 9)
+      {
+        /* add 10 char **/
+        result.keys = realloc(result.keys,result.nb_keys * sizeof(unsigned char *));
+        /* for each new char * */
+        for (i=result.nb_keys-10;i<result.nb_keys;i++)
+        {
+          /* malloc 5 chars for each char * */
+          result.keys[i] = malloc(KEY_SIZE);
+        }
+      }
+      /* store result (KEY_SIZE bytes) */
+      memcpy(result.keys[result.nb_keys],key,KEY_SIZE);
+      //printf("%s\n",hexa(key,5));
+      result.nb_keys++;
+    }
+    /* reload chipertext (altered by dechipering tentative) */
+    recopy_packet(&packets[0],&tmp_packet);
+  }
+
+  free_wep_packet(tmp_packet);
+
+  /* return results */
+  return (void *)result;
+}
+
+
 int main(int argc, char * argv[])
 {
   unsigned int i = 0;
+  unsigned int large_counter = 0;
   wireshark_dico buffers;
   wep_packet * packets = NULL;
   unsigned char * key = NULL;
@@ -40,41 +126,41 @@ int main(int argc, char * argv[])
     packets[i] = read_packet(buffers.packets[i].data,buffers.packets[i].length);
   }
 
-  //for (i=0;i<buffers.length;i++)
-  //{
-
-  //  // iterative version
-  //  tmp_packet = copy_packet(&packets[i]);
-  //  //print_packet(tmp_packet);
-  //  printf("Packet %d, key %s : %d\n",i,hexa(key,5),check_key(key,tmp_packet));
-  //  free_wep_packet(&tmp_packet);
-  //}
-
-  /* 2. iterative : bruteforce keys */
-  printf("Initial key : %s\n",hexa(key,5));
+  
   tmp_packet = copy_packet(&packets[0]);
 
-  /* check the null key */
-  if (check_key(key,tmp_packet)){printf("%s (yolo null key)\n",hexa(key,5));}
-  /* reload data */
-  recopy_packet(&packets[0],&tmp_packet);
 
-  chrono = time(NULL);
-
-  while (update_key(key,5)) /* returns 0 at overflow */
+  /* 2. parallel : launch threads for each 0x1000000 range (set key = 0x000000XXXX) */
+  for (large_counter=0;large_counter<0x10000;large_counter+=NB_THREADS)
   {
-    if (key[1] == 0x00 && key[0] == 0x00) {
-      elapsed = time(NULL) - chrono;
-      printf("%ds %s\n",(int)(elapsed),hexa(key,5));
-    }
-    if (check_key(key,tmp_packet))
+    /* prepare memory for the 4 threads */
+    // thread_data stuff
+
+    /* launch 4 threads */
+    for (i = 0; i < NB_THREADS; i++)
     {
-      printf("%s\n",hexa(key,5));
+      pthread_create(&thread[i], NULL, bruteforce, &thread_data[i]);
     }
-    recopy_packet(&packets[0],&tmp_packet);
+
+
+    /* join 4 threads */
+    for (i = 0; i < NB_THREADS; i++)
+    {
+      pthread_join(thread[i], (void **)&result);
+      /* read results */
+      if (result != -1)
+      {
+        brute_int = result;
+      }
+      /* copy results to main results buffer */
+    }
   }
 
-  /* 3. free memory */
+  /* 3. validate potential keys with the second packet */
+
+  /* 4. print key */
+
+  /* 5. free memory */
   for (i=0;i<buffers.length;i++)
   {
     free(packets[i].data);
@@ -82,6 +168,7 @@ int main(int argc, char * argv[])
   free(packets);
   free(key);
 
-
+  /* 6. ??? */
+  /* 7. profit !*/
   return EXIT_SUCCESS;
 }
