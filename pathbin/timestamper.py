@@ -3,13 +3,28 @@
 import sys
 import time
 import struct
-def iscool(b):
-  return (sum(1*(0x1f<j and j<0x7f) for j in b) == len(b))
+import binascii
+
+def iscool(c):
+  return (0x1f<c and c<0x7f)
 def issupercool(b):
   return (sum(1*(ord('A')<j and j<ord('z')) for j in b) == len(b))
 
+def safe(d):
+  r = ''
+  for i in d:
+    if iscool(ord(i)):
+      r += ' '+i
+    else:
+      r += binascii.hexlify(i)
+  return r
+
 if len(sys.argv) == 1:
-  print(time.ctime(struct.unpack('>I',sys.stdin.read(4))[0]))
+  data = sys.stdin.read(5)
+  while len(data) == 5:
+    print safe(data[:4]),':',time.ctime(struct.unpack('>I',data[:4])[0])
+    data = sys.stdin.read(5)
+
 else:
   t = time.time()
   if sys.argv[1] == "now":
