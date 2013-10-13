@@ -136,6 +136,8 @@ int main(int argc, char * argv[])
   wep_packet tmp_packet;
   thread_data * packed_data = NULL;
   thread_result * result;
+  unsigned int init_section = 0;
+  unsigned int last_section = 0;
 
   //key = malloc(KEY_SIZE*sizeof(unsigned char));
   //memset(key,0,KEY_SIZE*sizeof(unsigned char));
@@ -157,8 +159,24 @@ int main(int argc, char * argv[])
   tmp_packet = copy_packet(&packets[0]);
 
 
+  /* read param */
+  if ( argc == 1)
+  {
+    printf("%s <0xinit> [0xlast]  (section = 0x??????derp)\n",argv[0]);
+    return EXIT_SUCCESS;
+  } else {
+    init_section = strtol(argv[1],NULL,16);
+    if (argc == 3)
+    {
+      last_section = strtol(argv[2],NULL,16);
+    } else {
+      last_section = 0x10000;
+    }
+  }
+  printf("# %04x -> %04x\n",init_section,last_section);
+
   /* 2. parallel : launch threads for each 0x1000000 range (set key = 0x000000XXXX) */
-  for (large_counter=0x1450;large_counter<0x10000;large_counter+=NB_THREADS)
+  for (large_counter=init_section;large_counter<last_section;large_counter+=NB_THREADS)
   {
     /* prepare memory for the 4 threads */
     // thread_data stuff
@@ -192,7 +210,7 @@ int main(int argc, char * argv[])
         printf("thread %d returned %d keys\n",i,result->nb_keys);
         for (j=0;j<result->nb_keys;j++)
         {
-          printf("  potential key %d : ",j);
+          printf("potential key %d : ",j);
           for (k=0;k<KEY_SIZE;k++)
           {
             printf("%02x",result->keys[j][k]);

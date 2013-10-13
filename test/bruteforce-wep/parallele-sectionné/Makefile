@@ -5,6 +5,7 @@ out=bin/
 
 execute: compile
 	./${out}${e}
+	./${out}${e} 0x1453 0x4545
 
 compile: main.c
 	clear
