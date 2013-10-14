@@ -272,6 +272,7 @@ int main(int argc, char * argv[])
         }
       }
     }
+    diff = timer;
     time(&timer);
     diff = timer - diff;
     printf("Bruteforced 3 bytes in %ds.\n",(unsigned int)diff);
