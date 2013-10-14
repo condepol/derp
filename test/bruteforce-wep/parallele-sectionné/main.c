@@ -208,13 +208,13 @@ int main(int argc, char * argv[])
   }
   
   time(&timer);
-  diff=timer;
   printf("Started on %s",ctime(&timer));
   printf("xx:xx:xx:%02x:%02x -> xx:xx:xx:%02x:%02x\n",init_section >> 8,init_section % 0x100,last_section >> 8,last_section % 0x100);
 
   /* 2. parallel : launch threads for each 0x1000000 range (set key = 0x000000XXXX) */
   for (large_counter=init_section;large_counter<last_section;large_counter+=NB_THREADS)
   {
+    diff = timer;
     /* prepare memory for the 4 threads */
     // thread_data stuff
     for (i=0; i < NB_THREADS; i++)
@@ -272,10 +272,9 @@ int main(int argc, char * argv[])
         }
       }
     }
-    diff = timer;
     time(&timer);
-    diff = timer - diff;
-    printf("Bruteforced 3 bytes in %ds.\n",(unsigned int)diff);
+    printf("Bruteforced %d sections in %.0fs.\n",NB_THREADS,difftime(timer,diff));
+    printf("Remaining : %.0fs.\n",difftime(timer,diff)*((float)(0x10000-large_counter) /NB_THREADS));
   }
 
 
