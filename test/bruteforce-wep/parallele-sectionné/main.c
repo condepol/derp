@@ -5,7 +5,7 @@
 # include <string.h>
 # include <stdlib.h>
 # include <unistd.h>
-
+# include <signal.h>
 # include <pthread.h>
 
 # include "wep_utils.c"
@@ -15,7 +15,9 @@
 # include "printers.c"
 # include "cracker.c"
 
+
 # include "../ivs/ivs-known-8.c"
+//# include "../ivs/ivs-unknown-9.c"
 
 # define NB_THREADS 4
 pthread_t thread[NB_THREADS];
@@ -32,6 +34,18 @@ typedef struct {
   unsigned char ** keys;
 } thread_result;
 
+unsigned int large_counter = 0;
+
+void my_handler(int s){
+  if (s==2) {
+    printf("\nStopped at xxxxxx:%04x\n",large_counter);
+    exit(EXIT_SUCCESS); 
+  } else {
+    printf("Caught signal %d\n",s);
+    exit(EXIT_FAILURE); 
+  }
+}
+
 void * bruteforce (void * input_struct)
 {
   //unsigned int my_id = 0;
@@ -44,15 +58,7 @@ void * bruteforce (void * input_struct)
 
   vdata = (thread_data *)(input_struct);
   data = vdata[0];
-  /* get self id */
-  //my_id=pthread_self();
-  //for (i = 0; i < NB_THREADS; i++) {
-  //  if (thread[i] == pthread_self()) {
-  //    my_id = i;
-  //  }
-  //}
-
-    
+   
 
   /* set thread cancel type */
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -75,15 +81,27 @@ void * bruteforce (void * input_struct)
   }
   memcpy(key,data.key,KEY_SIZE);
   
-  //printf("Yolo %d %02x%02x%02x%02x%02x\n",(unsigned int)pthread_self(),key[0],key[1],key[2],key[3],key[4]);
-  /* do evil stuff */
 
   /* check the null key */
-  
   if (check_key(key,packet))
   {
     /* store key */
+    /* if needed, realloc */
+    if ((result->nb_keys % 10) == 9)
+    {
+      /* add 10 char **/
+      result->keys = realloc(result->keys,result->nb_keys * sizeof(unsigned char *));
+      /* for each new char * */
+      for (i=result->nb_keys-10;i<result->nb_keys;i++)
+      {
+        /* malloc 5 chars for each char * */
+        result->keys[i] = malloc(KEY_SIZE);
+      }
+    }
+    /* store result (KEY_SIZE bytes) */
+    memcpy(result->keys[result->nb_keys],key,KEY_SIZE);
     //printf("%s\n",hexa(key,5));
+    result->nb_keys++;
   }
   /* reload data */
   recopy_packet(&data.packet,&packet);
@@ -130,20 +148,32 @@ int main(int argc, char * argv[])
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int k = 0;
-  unsigned int large_counter = 0;
   wireshark_dico buffers;
   wep_packet * packets = NULL;
   wep_packet tmp_packet;
+  wep_packet check_packet;
+  wep_packet check_packet_fixed;
   thread_data * packed_data = NULL;
   thread_result * result;
   unsigned int init_section = 0;
   unsigned int last_section = 0;
+
+  time_t timer;
+  struct sigaction sigIntHandler;
 
   //key = malloc(KEY_SIZE*sizeof(unsigned char));
   //memset(key,0,KEY_SIZE*sizeof(unsigned char));
   //memcpy(key,(unsigned char *)"\x61\x61\x10\x14\x53",5);
   //memcpy(key,(unsigned char *)"\x60\x60\x10\x14\x53",KEY_SIZE);
   //memset(key,0,5);
+
+  sigIntHandler.sa_handler = my_handler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+
+  sigaction(SIGINT, &sigIntHandler, NULL);
+
+
 
   packed_data = malloc(NB_THREADS * sizeof(thread_data));
 
@@ -157,6 +187,8 @@ int main(int argc, char * argv[])
 
   // use the first packet
   tmp_packet = copy_packet(&packets[0]);
+  check_packet_fixed = copy_packet(&packets[1]);
+  check_packet = copy_packet(&check_packet_fixed);
 
 
   /* read param */
@@ -173,7 +205,10 @@ int main(int argc, char * argv[])
       last_section = 0x10000;
     }
   }
-  printf("# %04x -> %04x\n",init_section,last_section);
+  
+  time(&timer);
+  printf("Started on %s",ctime(&timer));
+  printf("xx:xx:xx:%02x:%02x -> xx:xx:xx:%02x:%02x\n",init_section >> 8,init_section % 0x100,last_section >> 8,last_section % 0x100);
 
   /* 2. parallel : launch threads for each 0x1000000 range (set key = 0x000000XXXX) */
   for (large_counter=init_section;large_counter<last_section;large_counter+=NB_THREADS)
@@ -191,7 +226,7 @@ int main(int argc, char * argv[])
     }    
 
     //printf("\x1b[32mNew wave !\x1b[0m %02x%02x%02x%02x%02x\n",packed_data[0].key[0],packed_data[0].key[1],packed_data[0].key[2],packed_data[0].key[3],packed_data[0].key[4]);
-    printf("??????%02x%02x\n",packed_data[0].key[3],packed_data[0].key[4]);
+    printf("xx:xx:xx:%02x:%02x\n",packed_data[0].key[3],packed_data[0].key[4]);
 
     /* launch 4 threads */
     for (i = 0; i < NB_THREADS; i++)
@@ -207,27 +242,37 @@ int main(int argc, char * argv[])
       /* read results */
       if (result->nb_keys != 0)
       {
-        printf("thread %d returned %d keys\n",i,result->nb_keys);
+        // printf("thread %d returned %d keys\n",i,result->nb_keys);
         for (j=0;j<result->nb_keys;j++)
         {
-          printf("potential key %d : ",j);
-          for (k=0;k<KEY_SIZE;k++)
+          //printf("potential key : ");
+
+          /* 3. validate potential keys with the second packet */
+          // copy packet
+          recopy_packet(&check_packet_fixed,&check_packet);
+
+          // check key
+          if (check_key(result->keys[j],check_packet))
           {
-            printf("%02x",result->keys[j][k]);
+            // Yay !
+            printf("Yay ! ");
+            for (k=0;k<KEY_SIZE;k++)
+            {
+              printf("%02x",result->keys[j][k]);
+              if (k<KEY_SIZE-1) {
+                printf(":");
+              }
+            }
+            printf("\n");           
+            //printf("%s\n",hexa(key,5));
           }
-          puts("");
+          /* reload data */
+    
         }
       }
-      /* copy results to main results buffer */
     }
   }
 
-  /* 3. validate potential keys with the second packet */
-  // lolnope
-
-  // todo : pondre un script en python qui valide les clefs potentielles depuis un fichier.
-  /* 4. print key */
-  // lolnonplus
 
   /* 5. free memory */
   for (i=0;i<buffers.length;i++)
