@@ -159,6 +159,7 @@ int main(int argc, char * argv[])
   unsigned int last_section = 0;
 
   time_t timer;
+  time_t diff;
   struct sigaction sigIntHandler;
 
   //key = malloc(KEY_SIZE*sizeof(unsigned char));
@@ -207,6 +208,7 @@ int main(int argc, char * argv[])
   }
   
   time(&timer);
+  diff=timer;
   printf("Started on %s",ctime(&timer));
   printf("xx:xx:xx:%02x:%02x -> xx:xx:xx:%02x:%02x\n",init_section >> 8,init_section % 0x100,last_section >> 8,last_section % 0x100);
 
@@ -227,7 +229,6 @@ int main(int argc, char * argv[])
 
     //printf("\x1b[32mNew wave !\x1b[0m %02x%02x%02x%02x%02x\n",packed_data[0].key[0],packed_data[0].key[1],packed_data[0].key[2],packed_data[0].key[3],packed_data[0].key[4]);
     printf("xx:xx:xx:%02x:%02x\n",packed_data[0].key[3],packed_data[0].key[4]);
-
     /* launch 4 threads */
     for (i = 0; i < NB_THREADS; i++)
     {
@@ -271,6 +272,9 @@ int main(int argc, char * argv[])
         }
       }
     }
+    time(&timer);
+    diff = timer - diff;
+    printf("Bruteforced 3 bytes in %ds.\n",(unsigned int)diff);
   }
 
 
