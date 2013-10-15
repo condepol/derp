@@ -9,5 +9,5 @@ execute: compile
 
 compile: main.c
 	clear
-	gcc -Werror -Wall ${m} -o ${out}${a} -pthread -O3 -S
-	gcc -Werror -Wall ${m} -o ${out}${e} -pthread -O3 -ggdb
+	gcc -Werror -Wall ${m} -o ${out}${a} -lrt -pthread -O3 -S
+	gcc -Werror -Wall ${m} -o ${out}${e} -lrt -pthread -O3 -ggdb

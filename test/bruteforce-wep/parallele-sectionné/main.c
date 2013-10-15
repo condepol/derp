@@ -7,6 +7,7 @@
 # include <unistd.h>
 # include <signal.h>
 # include <pthread.h>
+# include <sys/time.h>
 
 # include "wep_utils.c"
 
@@ -158,8 +159,9 @@ int main(int argc, char * argv[])
   unsigned int init_section = 0;
   unsigned int last_section = 0;
 
-  time_t timer;
-  time_t diff;
+  struct timespec timer;
+  struct timespec diff;
+
   struct sigaction sigIntHandler;
 
   //key = malloc(KEY_SIZE*sizeof(unsigned char));
@@ -207,8 +209,8 @@ int main(int argc, char * argv[])
     }
   }
   
-  time(&timer);
-  printf("Started on %s",ctime(&timer));
+  clock_gettime(0,&timer);
+  printf("Started on %s",ctime(&timer.tv_sec));
   printf("xx:xx:xx:%02x:%02x -> xx:xx:xx:%02x:%02x\n",init_section >> 8,init_section % 0x100,last_section >> 8,last_section % 0x100);
 
   /* 2. parallel : launch threads for each 0x1000000 range (set key = 0x000000XXXX) */
@@ -272,9 +274,11 @@ int main(int argc, char * argv[])
         }
       }
     }
-    time(&timer);
-    printf("Bruteforced %d sections in %.0fs.\n",NB_THREADS,difftime(timer,diff));
-    printf("Remaining : %.0fs.\n",difftime(timer,diff)*((float)(0x10000-large_counter) /NB_THREADS));
+    clock_gettime(0,&timer);
+    printf("Bruteforced %d sections in %ds.\n",
+      NB_THREADS,
+      (unsigned int)difftime(timer.tv_sec,diff.tv_sec));
+    printf("Remaining : %.0fs.\n",difftime(timer.tv_sec,diff.tv_sec)*((float)(0x10000-large_counter) /NB_THREADS));
   }
 
 
