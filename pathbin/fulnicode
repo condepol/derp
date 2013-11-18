@@ -2,18 +2,56 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from string import ascii_letters
+from string import uppercase,lowercase
 
+ranges = {
+  "MATHEMATICAL BOLD" : 0x1d400,
+  "MATHEMATICAL ITALIC" : 0x1d434,
+  "MATHEMATICAL BOLD ITALIC" : 0x1d468,
+  "MATHEMATICAL SCRIPT" : 0x1d49c,
+  "MATHEMATICAL BOLD SCRIPT" : 0x1d4d0,
+  "MATHEMATICAL FRAKTUR" : 0x1d504,
+  "MATHEMATICAL DOUBLE-STRUCK" : 0x1d538,
+  "MATHEMATICAL BOLD FRAKTUR" : 0x1d56c,
+  "MATHEMATICAL SANS-SERIF" : 0x1d5a0,
+  "MATHEMATICAL SANS-SERIF BOLD" : 0x1d5d4,
+  "MATHEMATICAL SANS-SERIF ITALIC" : 0x1d608,
+  "MATHEMATICAL SANS-SERIF BOLD ITALIC" : 0x1d63c,
+  "MATHEMATICAL MONOSPACE" : 0x1d670,
+  #"FULLWIDTH LATIN" : 0xff21,
+}
 
-r = bytes()
-for letter in ' '.join(sys.argv[1:]):
+def num(i):
+  try:
+    return (uppercase+lowercase).index(i)
+  except:
+    return -1
+def fullwidth(s):
+  r = bytes()
+  for letter in s:
+    val = ord(letter)
+    if val > 0x21 and val < 0x7f:
+      r += unichr(0xfee0+val)
+    elif val == 0x20:
+      r += unichr(0x3000)
+    else:
+      r += chr(val)
+  return r
+
+def math(s):
+  r = bytes()
+  for name in ranges.keys():
+    r += name.ljust(40)
+    r += ''.join([unichr(ranges[name]+num(i)) for i in s])
+    r += "\n"
+  return r
+
   
-  val = ord(letter)
-  if val > 0x21 and val < 0x7f:
-    r += unichr(0xfee0+val)
-  elif val == 0x20:
-    r += unichr(0x3000)
+if __name__ == "__main__":
+  if len(sys.argv) == 1:
+    s = sys.stdin.read()
   else:
-    r += chr(val)
+    s = ' '.join(sys.argv[1:])
 
-print r
+  print fullwidth(s)
+  print math(s)
