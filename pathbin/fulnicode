@@ -41,7 +41,7 @@ def fullwidth(s):
 def math(s):
   r = bytes()
   for name in ranges.keys():
-    r += name.ljust(40)
+    #r += name.ljust(40)
     r += ''.join([unichr(ranges[name]+num(i)) for i in s])
     r += "\n"
   return r
