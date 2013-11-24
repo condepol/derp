@@ -6,5 +6,7 @@ meta-galois: meta-main.c
 	./meta-galois > gf256.c
 galois: gf256.c main.c
 	gcc -Werror -Wall -ansi -pedantic -std=c99 main.c -o galois
+color: gf256.c main.c
+	gcc -Dusecolor -Werror -Wall -ansi -pedantic -std=c99 main.c -o galois
 clean:
 	rm -f gf256.c galois meta-galois gf256.ppm
