@@ -18,14 +18,25 @@ ranges = {
   "MATHEMATICAL SANS-SERIF ITALIC" : 0x1d608,
   "MATHEMATICAL SANS-SERIF BOLD ITALIC" : 0x1d63c,
   "MATHEMATICAL MONOSPACE" : 0x1d670,
-  #"FULLWIDTH LATIN" : 0xff21,
 }
 
-def num(i):
+capslock = {
+  "FULLWIDTH LATIN" : 0xff21,
+  "REGIONAL INDICATOR SYMBOL" : 0x1f1e6,
+  "PARENTHESIZED LATIN CAPITAL" : 0x1f110,
+  "SQUARED LATIN CAPITAL" : 0x1f130,
+  "NEGATIVE CIRCLED LATIN CAPITAL" : 0x1f150,
+  "NEGATIVE SQUARED LATIN CAPITAL" : 0x1f170,
+}
+
+turned = "ɐqɔpǝɟƃɥıɾʞʃɯuodbɹsʇnʌʍxʎz"
+
+def num(i,alphabet):
   try:
-    return (uppercase+lowercase).index(i)
+    return alphabet.index(i)
   except:
     return -1
+
 def fullwidth(s):
   r = bytes()
   for letter in s:
@@ -38,15 +49,24 @@ def fullwidth(s):
       r += chr(val)
   return r
 
-def math(s):
+def listit(s,array,alphabet):
   r = bytes()
-  for name in ranges.keys():
+  for name in array.keys():
     #r += name.ljust(40)
-    r += ''.join([unichr(ranges[name]+num(i)) for i in s])
+    r += ''.join([unichr(array[name]+num(i,alphabet)) for i in s])
     r += "\n"
   return r
 
-  
+def transcrit(i,alp,reference):
+  r = ''
+  for letter in i:
+    if letter in reference:
+      r += alp.decode('utf-8')[reference.index(letter)]
+    else:
+      r += letter
+  return r
+
+
 if __name__ == "__main__":
   if len(sys.argv) == 1:
     s = sys.stdin.read()
@@ -54,4 +74,6 @@ if __name__ == "__main__":
     s = ' '.join(sys.argv[1:])
 
   print fullwidth(s)
-  print math(s)
+  print transcrit(s.lower(),turned,lowercase)
+  print listit(s,ranges,uppercase+lowercase)
+  print listit(s.upper(),capslock,uppercase)
