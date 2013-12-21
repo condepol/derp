@@ -29,7 +29,14 @@ def matrix_to_chars(matrix):
       acc += matrix[row+3][column+1]<<7
       draw += unichr(0x2800+acc)
     draw += '\n'
-  print draw
+  lines = draw.splitlines()
+  nlines = []
+  for line in lines:
+    while line !=  '' and line[-1] == unichr(0x2800):
+      line = line[:-1]
+    nlines.append(line)
+  print '\n'.join(nlines)
+  print len('\n'.join(nlines))
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
