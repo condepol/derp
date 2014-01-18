@@ -2,32 +2,31 @@
 # coding: utf-8
 
 class A():
-  def __init__(self,*par):
+  def __init__(self,**kwargs):
 
-    try:
-      self.forA = par[0]['forA']
-    except Exception as e:
-      print(e)
+    if kwargs.has_key('forA'):
+      self.forA = kwargs['forA']
+    else:
       self.forA = 'default A :/'
 
     print('Initializing a A with parameter {}'.format(self.forA))
 
 class B(A):
-  def __init__(self,*par):
-    super().__init__(*par)
+  def __init__(self,**kwargs):
+    super().__init__(**kwargs)
 
-    try:
-      self.forB = par[0]['forB']
-    except Exception as e:
-      print(e)
+    if kwargs.has_key('forB'):
+      self.forB = kwargs['forB']
+    else:
       self.forB = 'default B :/'
 
     print('Initializing a E with parameter {}'.format(self.forB))
 
 if __name__ == ('__main__'):
-  b = B({
+  dico = {
     'forB':'thisisforB',
-    'forA':'information_for_A'})
+    'forA':'information_for_A'}
+  b = B(**dico)
 
   print('Initialized in B.__init__ : {}'.format(b.forB))
   print('Initialized in A.__init__ : {}'.format(b.forA))
