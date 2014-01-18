@@ -4,9 +4,9 @@
 class A():
   def __init__(self,**kwargs):
 
-    if kwargs.has_key('forA'):
-      self.forA = kwargs['forA']
-    else:
+    self.forA = kwargs.get('forA')
+
+    if self.forA == None:
       self.forA = 'default A :/'
 
     print('Initializing a A with parameter {}'.format(self.forA))
@@ -14,10 +14,10 @@ class A():
 class B(A):
   def __init__(self,**kwargs):
     super().__init__(**kwargs)
+    
+    self.forB = kwargs.get('forB')
 
-    if kwargs.has_key('forB'):
-      self.forB = kwargs['forB']
-    else:
+    if self.forB == None:
       self.forB = 'default B :/'
 
     print('Initializing a E with parameter {}'.format(self.forB))
