@@ -2,8 +2,8 @@
 # include <stdlib.h>
 # include <time.h>
 
-# define WIDTH 3
-# define HEIGHT 5
+# define WIDTH 50
+# define HEIGHT 50
 # define PIXELS WIDTH * HEIGHT
 
 struct color {
@@ -32,21 +32,51 @@ struct color near ( struct color c) {
   return c;
 }
 
+void printint(unsigned int a)
+{
+  putchar((unsigned char)a);
+  putchar((unsigned char)(a>>8));
+}
+
+
 void write(unsigned int x,unsigned int y,struct color c) {
   raster[x][y] = c;
-  fprintf(stderr,
+  /*fprintf(stderr,
     "%d %d #%02x%02x%02x\n",
     x,y,
     c.r,
     c.g,
-    c.b);
+    c.b);*/
   /* Graphic Control Extension Block */
-  /*printf("\x21\xf9\x04\x00\x64\x00\x00\x00");*/
+  putchar(0x21);
+  putchar(0xf9);
+  putchar(0x04);
+  putchar(0x00);
+  putchar(0x01);
+  putchar(0x00);
+  putchar(0x00);
+  putchar(0x00);
   /* Image Block */
-  /*putchar(0x2c);
+  putchar(0x2c);
   printint(x);
   printint(y);
-  printf("\x01\x00\x01\x00\xf0\x00\x01%c%c%c",c.r,c.g,c.b)*/
+  putchar(0x01);
+  putchar(0x00);
+  putchar(0x01);
+  putchar(0x00);
+  putchar(0x80);
+  putchar(c.r);
+  putchar(c.g);
+  putchar(c.b);
+  putchar(0x00);
+  putchar(0x00);
+  putchar(0x00);
+  putchar(0x02);
+  putchar(0x02);
+  putchar(0x44);
+  putchar(0x01);
+  putchar(0x00);
+
 }
 void walk(struct point p, struct point max) {
   if (p.x > 0) {
@@ -74,37 +104,24 @@ void walk(struct point p, struct point max) {
     }
   }
 }
-
-void printint(unsigned int a)
-{
-  putchar((unsigned char)a);
-  putchar((unsigned char)(a>>8));
-}
-
 void gif_header(void) {
   /* header */
   printf("GIF89a");
   /* logical screen info */
   printint(WIDTH);
   printint(HEIGHT);
-  putchar(0x77); /* R8G8B8 no palette */
+  putchar(0x70); /* R8G8B8 no palette */
   putchar(0x00); /* background color index (meaningless) should be 0x00*/
   putchar(0x00); /* Pixel Aspect Ratio (no information) */
-  /* image descriptor n°1 (canvas) */
-  putchar(0x2c); /* Image Separator */
-    /* top left : 0 x 0*/
-  putchar(0x00);
-  putchar(0x00);
-  putchar(0x00);
-  putchar(0x00);
-  printint(WIDTH);
-  printint(HEIGHT);
-  putchar(0x00);/* no palette */
-  putchar(0x00);
-  putchar(0x02);
-  putchar(0x02);/* dafuq SCREW THIS LZW THING I QUIT */
-  putchar(0x4c);
+
+  putchar(0x21); /* Extension */
+  putchar(0xff);
+  putchar(0x0b);
+  printf("NETSCAPE2.0");
+  putchar(0x03);
   putchar(0x01);
+  putchar(0x01);
+  putchar(0x00);
   putchar(0x00);
 }
 
