@@ -53,7 +53,6 @@ if __name__ == '__main__':
   while destinations != []:
     if done % 100 == 0:
       print(done/(width*height))
-      img.save('frame-{}-{:04d}.png'.format(filename,done))
     walk(destinations.pop(random.randrange(len(destinations))),img)
     done+=1
   img.save(filename) 
