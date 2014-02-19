@@ -7,14 +7,18 @@
 struct bbox {
   unsigned int year;
   unsigned int week;
+  /* those are indexes of two chars in hexvalues */
   unsigned char h1;
   unsigned char h2;
   unsigned char h3;
-  unsigned int ssid;
   unsigned char pass [5];
+  /* roses are red, violet are blue, 5 + 3 = 8 and i hope this is aligned. */
+  unsigned char ssid1;
+  unsigned char ssid2;
+  unsigned char ssid3;
 };
 
-const unsigned char * hexvalues = "4142434445464748494A4B4C4D4E4F505152535455565758595A30313233343536373839";
+const unsigned char * hexvalues = (unsigned char *)"4142434445464748494A4B4C4D4E4F505152535455565758595A30313233343536373839";
 
 unsigned char nibble(unsigned char x){
   /* it's a lowercase letter */
@@ -35,7 +39,7 @@ int main(int argc, char * argv[]) {
   unsigned int result_index = 0;
 
   unsigned char serial_number [13];
-  
+
   unsigned char sha1_output_buffer[20];
   SHA1Context ctx;
 
@@ -47,16 +51,10 @@ int main(int argc, char * argv[]) {
     return 0;
   }
 
-  /* ssid is little endian */ 
-  b.ssid = 0;
-  b.ssid += (nibble(argv[1][4]) << 4) + nibble(argv[1][5]);
-  b.ssid <<= 8;
-  b.ssid += (nibble(argv[1][2]) << 4) + nibble(argv[1][3]);
-  b.ssid <<= 8;
-  b.ssid += (nibble(argv[1][0]) << 4) + nibble(argv[1][1]);
-  b.ssid <<= 8;
+  b.ssid1 = (nibble(argv[1][0]) << 4) + nibble(argv[1][1]);
+  b.ssid2 = (nibble(argv[1][2]) << 4) + nibble(argv[1][3]);
+  b.ssid3 = (nibble(argv[1][4]) << 4) + nibble(argv[1][5]);
 
-  
   serial_number[0] = 'C';
   serial_number[1] = 'P';
   serial_number[12] = 0x00;
@@ -88,20 +86,20 @@ int main(int argc, char * argv[]) {
             SHA1Reset(&ctx);
             SHA1Input(&ctx,serial_number,12);
             SHA1Result(&ctx,sha1_output_buffer);
-            
+
             /* validation du ssid */
-            sha1_output_buffer[16] = 0;
-            if ((unsigned int)*((unsigned int *)&sha1_output_buffer[16]) == b.ssid) {
-              /* win ! */
-
-              results[result_index].year = b.year;
-              results[result_index].week = b.week;
-              results[result_index].h1 = hexvalues[h1];
-              results[result_index].h2 = hexvalues[h2];
-              results[result_index].h3 = hexvalues[h3];
-              memcpy(&results[result_index].pass,&sha1_output_buffer,5);
-
-              result_index++;
+            if (sha1_output_buffer[17] == b.ssid1) {
+              if (sha1_output_buffer[18] == b.ssid2) {
+                if (sha1_output_buffer[19] == b.ssid3) {
+                  results[result_index].year = b.year;
+                  results[result_index].week = b.week;
+                  results[result_index].h1 = h1;
+                  results[result_index].h2 = h2;
+                  results[result_index].h3 = h3;
+                  memcpy(&results[result_index].pass,&sha1_output_buffer,5);   
+                  result_index++;
+                }
+              }
             }
           }
         }
