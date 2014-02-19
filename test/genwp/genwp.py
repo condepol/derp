@@ -38,6 +38,7 @@ if __name__ == '__main__':
   filename = sys.argv[1]    if len(sys.argv) > 1 else 'wp.png'
   width = int(sys.argv[2])  if len(sys.argv) > 2 else 1600
   height = int(sys.argv[3]) if len(sys.argv) > 3 else 900
+  notrandom = True          if len(sys.argv) > 4 else False
 
   # add extension
   filename = '.'.join([filename,'png']) if '.' not in filename else filename
@@ -47,12 +48,18 @@ if __name__ == '__main__':
 
   img=Image.new('RGBA',dimension,color=(0x80,0x80,0x80,0))
   
-  coords = (random.randrange(width),random.randrange(height))
+  if notrandom:
+    coords = (int(width*0.5),int(height*0.5))
+  else:
+    coords = (random.randrange(width),random.randrange(height))
+
   walk(coords,img)
   done=0
   while destinations != []:
-    if done % 100 == 0:
-      print(done/(width*height))
+    if done % 1000 == 0:
+      sys.stdout.write('\x1b[0G[{:50s}]'.format('{}>'.format('='*int(50.0*done/(width*height)))))
+      sys.stdout.flush()
+      #print(done/(width*height))
     walk(destinations.pop(random.randrange(len(destinations))),img)
     done+=1
   img.save(filename) 
