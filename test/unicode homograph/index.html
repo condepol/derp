@@ -1,0 +1,128 @@
+<html>
+<head>
+<meta charset='UTF-8' />
+<style>
+.input {
+}
+.output {
+  background:#ccc;
+  font-family:Monospace;
+}
+</style>
+</head>
+<body onload='watermark();unwatermark();'>
+  <div id='watermark' style='float:left;'>
+    <h3>Input normal text :</h3>
+    <textarea id='input'  class='input' rows="5" cols="40" >This is an example of input text.</textarea><br />
+    <input    id='bw' type='button' value='Watermark'></input>
+    <p>Watermarked text :</p>
+    <div width=30%><span  id='output' class='output'></span></div>
+    <p>Watermark code: <textarea id='key' rows="1" cols="20">1dea</textarea></p>
+  </div>
+
+  <div id='unwatermark' style='float:right;'>
+    <h3>Input watermarked text :</h3>
+    <textarea id='xinput' class='input' rows="5" cols="40" >Thіs іs аn ехаmplе оf іnput text.</textarea><br />
+    <input    id='buw' type='button' value='Extract code'></input>
+    <p>Watermark code (hexa) : <span id='xkey' class='output'></span></p>
+  </div>
+<script>
+function watermark () {
+  var key_bit_length = 0;
+  var key = parseInt(document.getElementById('key').value,16);
+  var hidden_bits = 0;
+  var output = '';
+  var input = document.getElementById('input').value;
+  var i = 0;
+  var stop = 0;
+
+  var latin = 'aceijopsxyABCEHIJKMNOPSTXYZ';
+  var evil  = 'асеіјорѕхуΑΒСΕΗΙЈΚΜΝΟΡЅΤΧΥΖ';
+
+  document.getElementById('output').innerHTML = '';
+
+  /* find all switchable characters */
+  for (i=0; i<input.length; i++) {
+    if (latin.indexOf(input[i]) != -1) {
+      hidden_bits++;
+    }
+  }
+
+  
+  /* read number of bits of key */
+  key_bit_length = 0;
+  while ( 1<<key_bit_length < key ) {
+    key_bit_length += 4;
+  }
+
+  /* if there is enough storage in our steganographic channel */
+  if (key_bit_length <= hidden_bits ) {
+    /* for every n-bit storage, store n bits. */
+    i = 0;
+    while (stop == 0) {
+      /* if it's a switchable letter */
+      if (latin.indexOf(input[i]) != -1) {
+        /* if bit n°bit_index is 1, switch */
+        if (key % 2 == 1) {
+          output += evil[latin.indexOf(input[i])];
+        } else {
+          output += input[i];
+        }
+        key >>= 1;
+        if (key == 0) {
+          /* we're done */
+          stop = 1;
+        }
+      } else {
+        output += input[i];
+      }
+      i++;
+    }
+
+    while (i < input.length) {
+      output += input[i];
+      i++;
+    }
+    document.getElementById('output').innerHTML=output;
+  } else {
+    document.getElementById('output').innerHTML="Not enough storage bits <br />";
+    document.getElementById('output').innerHTML+="Watermark code bit length : "+key_bit_length+" <br />";
+    document.getElementById('output').innerHTML+="Switchable bits in text : "+hidden_bits+" <br />";
+  }
+
+};
+
+function unwatermark () {
+  var key = 0;
+  var bitlevel = 0;
+  var input = document.getElementById('xinput').value;
+  var i = 0;
+  var counter = 0;
+  var code = 0;
+
+  var le = 'aceijopsxyABCEHIJKMNOPSTXYZасеіјорѕхуΑΒСΕΗΙЈΚΜΝΟΡЅΤΧΥΖ';
+
+  for (i=0;i<input.length;i++) {
+    code = le.indexOf(input[i]);
+    if (code != -1) {
+      /* we have a bit there */
+      if (code > 26) {
+        /* it's 1 */
+        key += (1<<bitlevel);
+      }
+      bitlevel++;
+    }
+  }
+   
+  document.getElementById('xkey').innerHTML = key.toString(16);
+
+};
+document.getElementById('input')  .addEventListener('paste', watermark, false);
+document.getElementById('input')  .addEventListener('keyup', watermark, false);
+document.getElementById('bw')     .addEventListener('click', watermark, false);
+document.getElementById('xinput') .addEventListener('paste', unwatermark, false);
+document.getElementById('xinput') .addEventListener('click', unwatermark, false);
+document.getElementById('buw')    .addEventListener('click', unwatermark, false);
+</script>
+</body>
+</html>
