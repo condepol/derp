@@ -1,40 +1,105 @@
 <html>
 <head>
 <meta charset='UTF-8' />
+<title>Unісоdе homоgraрh text wаtеrmarker</title>
 <style>
-.input {
-}
-.output {
-  background:#ccc;
-  font-family:Monospace;
-}
+.output {background:#ccc;
+  max-width:300px;
+  margin:auto;
+  text-align: justify;}
+.wat    {background:#cfd;}
+.unw    {background:#fdc;}
+.doc    {background:#cdf;}
+h3      {margin-left:5px;}
+body    {margin:auto;max-width:800px;}
 </style>
 </head>
 <body onload='watermark();unwatermark();'>
-  <div id='watermark' style='float:left;'>
+<center><h1>Unісоdе homоgraрh text wаtеrmarker</h1></center>
+<div>
+  <div id='watermark' class='wat' style='float:left;'>
     <h3>Input normal text :</h3>
-    <textarea id='input'  class='input' rows="5" cols="40" >This is an example of input text.</textarea><br />
+    <textarea id='input' rows="5" cols="40" >This is an example of input text.</textarea><br />
     <input    id='bw' type='button' value='Watermark'></input>
     <p>Watermarked text :</p>
-    <div width=30%><span  id='output' class='output'></span></div>
-    <p>Watermark code: <textarea id='key' rows="1" cols="20">1dea</textarea></p>
+    <div width=30% id='output' class='output'></div>
+    <p>Watermark code (hexa): <br />
+    <textarea id='key' rows="1" cols="20">1dea</textarea></p>
+    <p>Watermark code (bin): <br /><span id='bkey' class='output'></span></p>
   </div>
 
-  <div id='unwatermark' style='float:right;'>
+  <div id='unwatermark' class='unw' style='float:right;'>
     <h3>Input watermarked text :</h3>
-    <textarea id='xinput' class='input' rows="5" cols="40" >Thіs іs аn ехаmplе оf іnput text.</textarea><br />
+    <textarea id='xinput' rows="5" cols="40" >Thіs іs аn ехаmplе оf іnput text.</textarea><br />
     <input    id='buw' type='button' value='Extract code'></input>
-    <p>Watermark code (hexa) : <span id='xkey' class='output'></span></p>
+    <!--<p>Watermark code (hexa) : <span id='xkey' class='output'></span></p>-->
   </div>
+</div>
+<div id='footer' class='doc' style='margin:auto;clear:both;' >
+<h3>What is this ?</h3>
+<p>This is a unicode watermarker. <br />
+It works because you see « aceijopsxyABCEHIJKMNOPSTXYZ »<br />
+the same way as « асеіјорѕхуΑΒСΕΗΙЈΚΜΝΟΡЅΤΧΥΖ ».</p>
+<p>However, the first letters are latin letters, and the second a mixed set of cyrillic/greek letters :</p>
+<pre>
+$ echo 'aceijopsxyABCEHIJKMNOPSTXYZ' | hd
+00000000  61 63 65 69 6a 6f 70 73  78 79 41 42 43 45 48 49  |aceijopsxyABCEHI|
+00000010  4a 4b 4d 4e 4f 50 53 54  58 59 5a 0a              |JKMNOPSTXYZ.|
+0000001c
+$ echo 'асеіјорѕхуΑΒСΕΗΙЈΚΜΝΟΡЅΤΧΥΖ' | hd
+00000000  d0 b0 d1 81 d0 b5 d1 96  d1 98 d0 be d1 80 d1 95  |................|
+00000010  d1 85 d1 83 ce 91 ce 92  d0 a1 ce 95 ce 97 ce 99  |................|
+00000020  d0 88 ce 9a ce 9c ce 9d  ce 9f ce a1 d0 85 ce a4  |................|
+00000030  ce a7 ce a5 ce 96 0a                              |.......|
+00000037
+</pre>
+<h3>uh.. why would I use it ?</h3>
+<p>To protect your digital productions (articles, tweets) from copypastafaris stealers.</p>
+<p>The most effective watermark code is the longest <tt>fffff</tt> you can use, because composed only of binary <tt>1</tt>s, thus switching every possible letter with it's greek/cyrillic homograph.<br />
+However, you can use a custom code for obvious reasons.</p>
+<h3>Won't people notice ?</h3>
+<p>There is a watermark on the title of this page : <tt>caf</tt>. Did you notice ?</p>
+</div>
 <script>
+function gethex(nibble) {
+/*  >>> print '\n'.join(["case('{:0x}') : return '{:04b}';".format(i,i) for i in xrange(16)]) */
+/* HAHAHA LOL JAVASCRIPT */
+  switch (nibble) {
+    case('0') : return '0000';
+    case('1') : return '0001';
+    case('2') : return '0010';
+    case('3') : return '0011';
+    case('4') : return '0100';
+    case('5') : return '0101';
+    case('6') : return '0110';
+    case('7') : return '0111';
+    case('8') : return '1000';
+    case('9') : return '1001';
+    case('a') : return '1010';
+    case('b') : return '1011';
+    case('c') : return '1100';
+    case('d') : return '1101';
+    case('e') : return '1110';
+    case('f') : return '1111';
+    case('A') : return '1010';
+    case('B') : return '1011';
+    case('C') : return '1100';
+    case('D') : return '1101';
+    case('E') : return '1110';
+    case('F') : return '1111';
+  }
+  return 'nope';
+}
 function watermark () {
-  var key_bit_length = 0;
-  var key = parseInt(document.getElementById('key').value,16);
-  var hidden_bits = 0;
+  var input_key = document.getElementById('key').value;
+  var key = '';
+  var stegano_bits = 0;
   var output = '';
   var input = document.getElementById('input').value;
   var i = 0;
+  var bit_index = 0;
   var stop = 0;
+  var new_nibble = '';
 
   var latin = 'aceijopsxyABCEHIJKMNOPSTXYZ';
   var evil  = 'асеіјорѕхуΑΒСΕΗΙЈΚΜΝΟΡЅΤΧΥΖ';
@@ -44,32 +109,40 @@ function watermark () {
   /* find all switchable characters */
   for (i=0; i<input.length; i++) {
     if (latin.indexOf(input[i]) != -1) {
-      hidden_bits++;
+      stegano_bits++;
     }
   }
 
-  
-  /* read number of bits of key */
-  key_bit_length = 0;
-  while ( 1<<key_bit_length < key ) {
-    key_bit_length += 4;
+  for (i=0;i<input_key.length;i++) {
+    new_nibble = gethex(input_key[i]);
+    if (new_nibble == 'nope') {
+      /* wrong character */
+      document.getElementById('output').innerHTML = 'Invalid character in key : '+input_key[i];
+      stop = 1;
+    } else {
+      key += new_nibble;
+    }
   }
+  if (stop == 1) {
+    return;
+  }
+  /*document.getElementById('bkey').innerHTML = key;*/
+
 
   /* if there is enough storage in our steganographic channel */
-  if (key_bit_length <= hidden_bits ) {
-    /* for every n-bit storage, store n bits. */
+  if (key.length <= stegano_bits ) {
     i = 0;
     while (stop == 0) {
       /* if it's a switchable letter */
       if (latin.indexOf(input[i]) != -1) {
         /* if bit n°bit_index is 1, switch */
-        if (key % 2 == 1) {
+        if (key[bit_index] == '1') {
           output += evil[latin.indexOf(input[i])];
         } else {
           output += input[i];
         }
-        key >>= 1;
-        if (key == 0) {
+        bit_index += 1;
+        if (bit_index == key.length) {
           /* we're done */
           stop = 1;
         }
@@ -84,17 +157,18 @@ function watermark () {
       i++;
     }
     document.getElementById('output').innerHTML=output;
+    document.getElementById('xinput').value=output;
   } else {
     document.getElementById('output').innerHTML="Not enough storage bits <br />";
-    document.getElementById('output').innerHTML+="Watermark code bit length : "+key_bit_length+" <br />";
-    document.getElementById('output').innerHTML+="Switchable bits in text : "+hidden_bits+" <br />";
+    document.getElementById('output').innerHTML+="Watermark code bit length : "+key.length+" <br />";
+    document.getElementById('output').innerHTML+="Switchable bits in text : "+stegano_bits+" <br />";
   }
 
 };
 
 function unwatermark () {
-  var key = 0;
-  var bitlevel = 0;
+  var key = '';
+  var acc = 0;
   var input = document.getElementById('xinput').value;
   var i = 0;
   var counter = 0;
@@ -108,13 +182,20 @@ function unwatermark () {
       /* we have a bit there */
       if (code > 26) {
         /* it's 1 */
-        key += (1<<bitlevel);
+        acc = (1<<(counter)) + acc ;
       }
-      bitlevel++;
+      if (counter % 4 == 3) {
+        console.log(counter,key);
+        key = acc.toString(16) + key;
+        acc = 0;
+        counter = 0;
+      } else {
+        counter += 1;
+      }
     }
   }
    
-  document.getElementById('xkey').innerHTML = key.toString(16);
+  document.getElementById('xkey').innerHTML = key;
 
 };
 document.getElementById('input')  .addEventListener('paste', watermark, false);
