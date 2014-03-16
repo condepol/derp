@@ -1,4 +1,5 @@
-# -*- coding:Utf-8 -*-
+#!/usr/bin/env python2.7
+# coding: utf-8
 from random import randrange
 from turtle import *
 on_passe_par_la_moria=0
