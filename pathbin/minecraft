@@ -1,2 +1,1 @@
-cd /home/antoine/.games/minecraft/
-java -jar minecraft.jar
+java -jar ~/.minecraft/Minecraft.jar

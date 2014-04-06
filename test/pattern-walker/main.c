@@ -4,30 +4,27 @@
 # include <ctype.h>
 # include <unistd.h>
 
-void recursion(char * charset, unsigned int charset_length, unsigned int length, char * buffer, unsigned int level)
+unsigned int length;
+char ** buffer_stack;
+
+void recursion(char * charset, unsigned int charset_length,unsigned int level)
 {
-  char * buffer_2 = NULL;
   unsigned int i = 0;
-  buffer_2 = malloc(length+1);
-  while (buffer_2 == NULL) {
-    sleep(0.2); // olol derp derp
-    buffer_2 = malloc(length+1);
-  }
-  memset(buffer_2,0,length+1);
-  strncpy(buffer_2,buffer,length);
+  unsigned int bi = 0;
 
   if (level)
   {
     for (i=0;i<charset_length;i++)
     {
-      buffer_2[length-level] = charset[i];
-      recursion(charset,charset_length,length,buffer_2,level-1);
+      for (bi=length-level;bi<length;bi++) {
+        buffer_stack[bi][length-level] = charset[i];
+      }
+      recursion(charset,charset_length,level-1);
     }
   } else {
-    for (i=0;i<length;i++) {putchar(buffer[i]);}
-    puts("");
+    for (i=0;i<length;i++) {putchar(buffer_stack[length-1][i]);}
+    putchar('\n');
   }
-  free(buffer_2);
 }
 
 typedef struct {
@@ -56,8 +53,7 @@ int match_known_charset(char * name,unsigned int * charset_length, char ** chars
   {
     if (strcmp(dico[i].name,name) == 0)
     {
-      *charset = malloc(dico[i].charset_length);
-      memcpy(*charset,dico[i].charset,dico[i].charset_length);
+      *charset = dico[i].charset;
       *charset_length = dico[i].charset_length;
       return EXIT_SUCCESS;
     }
@@ -65,84 +61,108 @@ int match_known_charset(char * name,unsigned int * charset_length, char ** chars
   return EXIT_FAILURE;
 }
 
-char * safe(char * input,unsigned int length)
+/* safe printing function */
+void safe(char * input,unsigned int length)
 {
   unsigned int i;
-  char * output = NULL;
-  char t = 0;
-
-  output = malloc(length);
-  memset(output,'.',length);
-
   for (i=0;i<length;i++)
   { 
-    t = input[i];
-    if (isgraph(t))
+    if (isgraph(input[i]))
     {
-      output[i] = input[i];
+      printf("%c",input[i]);
+    } else {
+      printf(".");
     }
   }
-  return output;
 }
 
 int main (int argc, char * argv[])
 {
   char * charset = NULL;
+  unsigned int used_user_charset = 0;
   unsigned int charset_length;
-  unsigned int length;
   unsigned int start_level;
-  char * buffer;
+  unsigned int i;
 
+  /* read arguments */
   if ((argc < 3 )||(argc > 4))
   {
     printf("Usage : %s <charset> <length> [prefix]\n",argv[0]);
     puts("Charsets :");
     for (length=0;length<KNOWN_CHARSETS;length++)
     {
-      printf("%10s «%s»\n",dico[length].name,safe(dico[length].charset,dico[length].charset_length));
+      printf("%10s «",dico[length].name);
+      safe(dico[length].charset,dico[length].charset_length);
+      printf("»\n");
     }
     return EXIT_FAILURE;
   }
+
+  /* identify charset */
   if (match_known_charset(argv[1],&charset_length,&charset) == EXIT_FAILURE)
   {
+    /* if not known, allocate and copy user defined. */
     charset_length = strlen(argv[1]);
     charset = malloc(charset_length);
     strncpy(charset,argv[1],charset_length);
+    used_user_charset = 1;
   }
 
+  /* get desired length */
   length = atoi(argv[2]);
-
-  buffer = malloc(length);
-  while (buffer == NULL)
-  {
-    buffer = malloc(length);
-    sleep(0.2);
+  
+  /* allocate memory */
+  buffer_stack = malloc(length * sizeof(char *));
+  if (buffer_stack == NULL) {
+    printf("bro are u srs ?");
+    if (used_user_charset) {free(charset);}
+    return EXIT_FAILURE;
   }
-  memset(buffer,66,length);
+  for (i=0;i<length;i++) {
+    buffer_stack[i] = malloc(length * sizeof(char));
+    if (buffer_stack[i] == NULL) {
+      sleep(0.2);
+      buffer_stack[i] = malloc(length * sizeof(char));
+      if (buffer_stack[i] == NULL) {
+        printf("Two mallocs of %d bytes failed, fix you system.\n",length);
+        /* nique les fuites */
+        return EXIT_FAILURE;
+      }
+    }
+    memset(buffer_stack[i],66,length);
+  }
 
+  /* check prefix existence */
   if (argc == 4)
   {
     if (strlen(argv[3]) > length)
     {
       fprintf(stderr,"prefix too long\n");
+      /* be nice, free memory. */
+      for (i=0;i<length;i++) {free(buffer_stack[i]);}
+      free(buffer_stack);
+      if (used_user_charset) {free(charset);}
       return EXIT_FAILURE;
     }
-    strcpy(buffer,argv[3]);
+    for (i=0;i<length;i++) {strcpy(buffer_stack[i],argv[3]);}
     start_level = length-strlen(argv[3]);
   } else {
     start_level = length;
   }
 
 
-  /*
-  HUURRRR DUUUURRRR RDEPR DERP
-  fprintf(stderr,"Charset : «%s»\nCharset length : %d\nLength : %d\n",charset,charset_length,length);
-  */
-  
-  recursion(charset,charset_length,length,buffer,start_level);
+  /* do stuff */
+  recursion(charset,charset_length,start_level);
 
-  free(buffer);
-  free(charset);
+
+  /* free allocated memory */
+  for (i=0;i<length;i++) {
+    free(buffer_stack[i]);
+  }
+  free(buffer_stack);
+
+  /* only if we used user charset */
+  if (used_user_charset) {free(charset);}
 
   return EXIT_SUCCESS;
 }
