@@ -1,8 +1,8 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import sys
-from string import uppercase,lowercase
+from string import ascii_uppercase,ascii_lowercase
 
 ranges = {
   "MATHEMATICAL BOLD" : 0x1d400,
@@ -38,22 +38,22 @@ def num(i,alphabet):
     return -1
 
 def fullwidth(s):
-  r = bytes()
+  r = ''
   for letter in s:
     val = ord(letter)
     if val > 0x21 and val < 0x7f:
-      r += unichr(0xfee0+val)
+      r += chr(0xfee0+int(val))
     elif val == 0x20:
-      r += unichr(0x3000)
+      r += chr(0x3000)
     else:
-      r += chr(val)
+      r += chr(int(val))
   return r
 
 def listit(s,array,alphabet):
-  r = bytes()
+  r = ''
   for name in array.keys():
     #r += name.ljust(40)
-    r += ''.join([unichr(array[name]+num(i,alphabet)) for i in s])
+    r += ''.join([chr(array[name]+num(i,alphabet)) for i in s])
     r += "\n"
   return r
 
@@ -61,7 +61,7 @@ def transcrit(i,alp,reference):
   r = ''
   for letter in i:
     if letter in reference:
-      r += alp.decode('utf-8')[reference.index(letter)]
+      r += alp[reference.index(letter)]
     else:
       r += letter
   return r
@@ -73,7 +73,7 @@ if __name__ == "__main__":
   else:
     s = ' '.join(sys.argv[1:])
 
-  print fullwidth(s)
-  print transcrit(s.lower(),turned,lowercase)
-  print listit(s,ranges,uppercase+lowercase)
-  print listit(s.upper(),capslock,uppercase)
+  print(fullwidth(s))
+  print(transcrit(s.lower(),turned,ascii_lowercase))
+  print(listit(s,ranges,ascii_uppercase+ascii_lowercase))
+  print(listit(s.upper(),capslock,ascii_uppercase))
