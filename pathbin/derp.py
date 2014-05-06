@@ -66,6 +66,6 @@ def derp():
 try:
   while True:
     print("%sderp"%(derp()))
-    time.sleep(0.3)
+    time.sleep(0.1)
 except KeyboardInterrupt:
   pass

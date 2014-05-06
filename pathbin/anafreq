@@ -37,11 +37,9 @@ def coolformat(array):
   return r
 
 def main():
-  # check arg
-  if len(sys.argv) not in [1,2]:
-    return None
+    
 
-  if len(sys.argv) == 2:
+  if len(sys.argv) > 2:
     # load data
     with open(sys.argv[1],'r') as o:
       data = o.read()
@@ -54,7 +52,17 @@ def main():
     # count
     c = anafreq(data)
     # print
-    print coolformat(c)
+    if len(sys.argv) == 3:
+      ma = float(max(c))
+      mi = float(min(c))
+      z = [int(255*((x-mi)/(ma-mi))) for x in c]
+      # write a .ppm image
+      with open(sys.argv[2],'w') as o:
+        o.write("P6 16 16 255 {}".format(''.join([3*chr(i) for i in z])))
+        o.close()
+      print 'Written data in {}'.format(sys.argv[2])
+    else:
+      print coolformat(c)
   else:
     print "No data."
   
