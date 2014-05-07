@@ -81,6 +81,7 @@ def verbose_ping(dest_addr, timeout = 2, count = 4, psize = 64):
   print
 
 if __name__ == '__main__':
+  verbose_ping("localhost")
   verbose_ping("heise.de")
   verbose_ping("google.com")
   verbose_ping("a-test-url-taht-is-not-available.com")
