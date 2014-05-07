@@ -5,25 +5,29 @@
 # include <sys/stat.h>
 # include <sys/types.h>
 
-# define BUFFAH_SIZE 16
+# define BUFFAH_SIZE 64
 
 unsigned char hexa(unsigned char x){return (x+0x30)+((x>9)*0x27);}
 unsigned char ch1(unsigned char x){if((x>0x1f)&&(x<0x7f)){return 32;}else{return hexa(x>>4);}}
 unsigned char ch2(unsigned char x){if((x>0x1f)&&(x<0x7f)){return x;}else{return hexa(x%16);}}
 unsigned int color(unsigned char x)
 {
-  switch (x>>5) {
-    case 2:
-      if (((x-1)%0x20)<0x1b) { return 4+(x>0x60)*2;}
-      return 5;
-    case 3:
-      if (((x-1)%0x20)<0x1b) { return 4+(x>0x60)*2;}
-      return 5;
-    case 1:
-      if (x%0x30<10) {return 1;}
-      return 5;
-    default:
-      return 0;
+  if (x) {
+    switch (x>>5) {
+      case 2:
+        if (((x-1)%0x20)<0x1b) { return 4+(x>0x60)*2;}
+        return 5;
+      case 3:
+        if (((x-1)%0x20)<0x1b) { return 4+(x>0x60)*2;}
+        return 5;
+      case 1:
+        if (x%0x30<10) {return 1;}
+        return 5;
+      default:
+        return 7;
+    }
+  } else {
+    return 0;
   }
 }
 
