@@ -1,0 +1,5 @@
+#!/bin/sh
+mocp -Q "%title"
+mocp -f
+sleep 0.2
+mocp -Q "%title"

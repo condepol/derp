@@ -7,4 +7,4 @@ execute: compile
 
 compile: main.c
 	clear
-	gcc -Wall -ansi -pedantic -std=c99 ${m} -o ${e}
+	gcc -Wall -Wextra -ansi -pedantic -std=c99 -O3 -march=native ${m} -o ${e}
