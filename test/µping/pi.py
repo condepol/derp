@@ -1,91 +1,17 @@
-#!/usr/bin/env python2.7
-import os,select,socket,struct,sys,time
-def checksum(source_string):
-  return struct.unpack('<H',struct.pack('>H',65535^(
-    (sum(struct.unpack('H',source_string[i:i+2])[0]for i in range(0,len(source_string),2))%0x10000) +
-    (sum(struct.unpack('H',source_string[i:i+2])[0]for i in range(0,len(source_string),2)) >> 16))
-    ))[0]
+import os,socket as z,struct as S,time
+P,i=print,os.getpid()&65535
+for H in ['heise.de','localhost','127.0.0.2','127.4.5.6','2.2.2.2']:
+ try:
+  s=z.socket(2,3,1)
+  s.settimeout(0.2)
+  H,head,data=z.gethostbyname(H),S.pack("bbHHh",8,0,0,i,1),S.pack("d",time.time())+bytes([81]*68)
+  head=S.pack("bbHHh",8,0,S.unpack('<H',S.pack('>H',65535^((lambda x:(x%65536)+(x>>16))(sum(S.unpack('H',(head+data)[i:i+2])[0]for i in range(0,len((head+data)),2))))))[0],i,1)
+  s.sendto(head+data,(H,1))
+  p,a=s.recvfrom(1024)
+  P("{:9s} : \x1b[32mup\x1b[0m {:0.4f}ms".format(H,time.time()-S.unpack("d",p[28:28+S.calcsize("d")])[0]))
+  s.close()
+ except z.gaierror as e:
+  P("{:9s} : \x1b[31munresolvable\x1b[0m :{}".format(H,e))
+ except z.timeout as e:
+  P("{:9s} : \x1b[31mdown\x1b[0m".format(H))
 
-def receive_one_ping(my_socket, id, timeout):
-  time_left = timeout
-  while True:
-    started_select = time.time()
-    what_ready = select.select([my_socket], [], [], time_left)
-    how_long_in_select = (time.time() - started_select)
-    if what_ready[0] == []: # Timeout
-      return
-
-    time_received = time.time()
-    received_packet, addr = my_socket.recvfrom(1024)
-    icmpHeader = received_packet[20:28]
-    type, code, checksum, packet_id, sequence = struct.unpack("bbHHh", icmpHeader)
-    if packet_id == id:
-      bytes = struct.calcsize("d")
-      time_sent = struct.unpack("d", received_packet[28:28 + bytes])[0]
-      return time_received - time_sent
-
-    time_left = time_left - how_long_in_select
-    if time_left <= 0:
-      return
-
-
-def send_one_ping(my_socket, dest_addr, id, psize):
-  dest_addr  =  socket.gethostbyname(dest_addr)
-  header = struct.pack("bbHHh",8,0,0,id,1)
-  data = struct.pack("d",time.time())+(psize-16)*"Q"
-  my_checksum = checksum(header + data)
-  header = struct.pack("bbHHh", 8, 0, socket.htons(my_checksum), id, 1)
-  my_socket.sendto(header + data, (dest_addr, 1)) # Don't know about the 1
-
-
-def do_one(dest_addr, timeout, psize):
-  """
-  Returns either the delay (in seconds) or none on timeout.
-  """
-  icmp = socket.getprotobyname("icmp")
-  try:
-    my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
-  except socket.error, (errno, msg):
-    if errno == 1:
-      # Operation not permitted
-      msg = msg + (
-        " - Note that ICMP messages can only be sent from processes"
-        " running as root."
-      )
-      raise socket.error(msg)
-    raise # raise the original error
-
-  my_id = os.getpid() & 0xFFFF
-
-  send_one_ping(my_socket, dest_addr, my_id, psize)
-  delay = receive_one_ping(my_socket, my_id, timeout)
-
-  my_socket.close()
-  return delay
-
-
-def verbose_ping(dest_addr, timeout = 2, count = 4, psize = 64):
-  """
-  Send `count' ping with `psize' size to `dest_addr' with
-  the given `timeout' and display the result.
-  """
-  for i in xrange(count):
-    print "ping %s with ..." % dest_addr,
-    try:
-      delay  =  do_one(dest_addr, timeout, psize)
-    except socket.gaierror, e:
-      print "failed. (socket error: '%s')" % e[1]
-      break
-
-    if delay  ==  None:
-      print "failed. (timeout within %ssec.)" % timeout
-    else:
-      delay  =  delay * 1000
-      print "get ping in %0.4fms" % delay
-  print
-
-if __name__ == '__main__':
-  verbose_ping("heise.de")
-  verbose_ping("google.com")
-  verbose_ping("a-test-url-taht-is-not-available.com")
-  verbose_ping("192.168.1.1")
