@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
     A pure python ping implementation using raw socket.
@@ -101,32 +101,18 @@ import time
 ICMP_ECHO_REQUEST = 8 # Seems to be the same on Solaris.
 
 
-def checksum(source_string):
+def checksum(data):
     """
-    I'm not too confident that this is right but testing seems
-    to suggest that it gives the same answers as in_cksum in ping.c
+    Stuff
     """
-    sum = 0
-    count_to = (len(source_string) / 2) * 2
-    for count in xrange(0, count_to, 2):
-        this = ord(source_string[count + 1]) * 256 + ord(source_string[count])
-        sum = sum + this
-        sum = sum & 0xffffffff # Necessary?
-
-    if count_to < len(source_string):
-        sum = sum + ord(source_string[len(source_string) - 1])
-        sum = sum & 0xffffffff # Necessary?
-
-    sum = (sum >> 16) + (sum & 0xffff)
-    sum = sum + (sum >> 16)
-    answer = ~sum
-    answer = answer & 0xffff
-
-    # Swap bytes. Bugger me if I know why.
-    answer = answer >> 8 | (answer << 8 & 0xff00)
-
-    return answer
-
+    # accumulate shorts
+    mine=sum(data[i]+(data[i+1]<<8) for i in range(0,(len(data)|1)-1,2))
+    # add last odd byte
+    if len(data)&1: mine += data[-1]
+    # shift carries
+    while mine>>16: mine = (mine>>16) + (mine%65536)
+    # swap bytes and xor
+    return (((mine&255)<<8)+(mine>>8)) ^ 65535
 
 def receive_one_ping(my_socket, id, timeout):
     """
@@ -170,8 +156,7 @@ def send_one_ping(my_socket, dest_addr, id, psize):
 
     # Make a dummy heder with a 0 checksum.
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, my_checksum, id, 1)
-    bytes = struct.calcsize("d")
-    data = (psize - bytes) * "Q"
+    data = bytes([ord("Q")]*(psize - struct.calcsize("d")))
     data = struct.pack("d", time.time()) + data
 
     # Calculate the checksum on the data and the dummy header.
@@ -183,7 +168,6 @@ def send_one_ping(my_socket, dest_addr, id, psize):
         "bbHHh", ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), id, 1
     )
     packet = header + data
-    print(packet)
     my_socket.sendto(packet, (dest_addr, 1)) # Don't know about the 1
 
 
@@ -194,14 +178,14 @@ def do_one(dest_addr, timeout, psize):
     icmp = socket.getprotobyname("icmp")
     try:
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
-    except socket.error, (errno, msg):
-        if errno == 1:
+    except socket.error as e:
+        if e.errno == 1:
             # Operation not permitted
-            msg = msg + (
+            print(
                 " - Note that ICMP messages can only be sent from processes"
                 " running as root."
             )
-            raise socket.error(msg)
+            raise socket.error
         raise # raise the original error
 
     my_id = os.getpid() & 0xFFFF
@@ -218,23 +202,24 @@ def verbose_ping(dest_addr, timeout = 2, count = 4, psize = 64):
     Send `count' ping with `psize' size to `dest_addr' with
     the given `timeout' and display the result.
     """
-    for i in xrange(count):
-        print "ping %s with ..." % dest_addr,
+    for i in range(count):
+        print("ping {} ".format(dest_addr),end='')
         try:
             delay  =  do_one(dest_addr, timeout, psize)
-        except socket.gaierror, e:
-            print "failed. (socket error: '%s')" % e[1]
+        except socket.gaierror as e:
+            print("\x1b[31mfailed.\x1b[0m (socket error: '{}')".format(e))
             break
 
         if delay  ==  None:
-            print "failed. (timeout within %ssec.)" % timeout
+            print("\x1b[31mfailed.\x1b[0m (timeout within {}sec.)".format(timeout))
         else:
             delay  =  delay * 1000
-            print "get ping in %0.4fms" % delay
+            print("\x1b[32mget ping in %0.4fms\x1b[0m" % delay)
     print
 
 if __name__ == '__main__':
     verbose_ping("heise.de")
     verbose_ping("google.com")
+    verbose_ping("localhost")
     verbose_ping("a-test-url-taht-is-not-available.com")
     verbose_ping("192.168.1.1")
