@@ -113,8 +113,6 @@
 2ex 1F483
 2ey 1F485
 2ez 1F48B
-2f_
-2f-
 2f0 1F491
 2f1 1F493
 2f2 1F494
@@ -206,22 +204,6 @@
 492 1F525
 4_o_ 1F367
 4_o- 1F366
-4_o0
-4_o1
-4_o2
-4_o3
-4_o4
-4_o5
-4_o6
-4_o7
-4_o8
-4_o9
-4_oa
-4_ob
-4_oc
-4_od
-4_oe
-4_of
 4_og 1F303
 4_oh 1F304
 4_oi 1F305
@@ -280,8 +262,6 @@
 4_px 1F3E0
 4_py 1F3E1
 4_pz 1F3E2
-4_q_
-4_q-
 4_q0 1F3E6
 4_q1 1F3E7
 4_q2 1F3E8
@@ -356,8 +336,6 @@
 4_rx 1F530
 4_ry 1F531
 4_rz 1F532
-4_s_
-4_s-
 4_s0 1F535
 4_s1 1F536
 4_s2 1F537
@@ -396,10 +374,6 @@
 4_sz 1F6BF
 4_t_ 2666
 4_t- 2665
-4_t0 
-4_t1
-4_t2
-4_t3
 4_t4 260E
 4_t5 267F
 4_t6 26A0
@@ -416,22 +390,10 @@
 4_th 26FD
 4_ti 274C
 4_tj 274E
-4_tk 
-4_tl
-4_tm
-4_tn
-4_to
-4_tp
-4_tq
-4_tr
-4_ts
-4_tt
 4_tu 2196
 4_tv 2197
 4_tw 2198
 4_tx 2199
-4_ty
-4_tz
 4_u0 2668
 4_u1 2702
 4_u2 2708
@@ -442,11 +404,6 @@
 4_u7 2753
 4_u8 2754
 4_u9 2755
-4_ua
-4_ub
-4_uc
-4_ud
-4_ue
 angel "O:)"
 colonthree ":3"
 confused "o.O"
@@ -459,15 +416,10 @@ glasses "8-)"
 grin ":D"
 grumpy ">:("
 heart "<3"
-kiki 
-kiss 
 like "(y)"
 pacman ":v"
-penguin 
 poop 1F4A9
 putnam ":putnam:"
-robot 
-shark 
 smile ":)"
 squint "-_-"
 sunglasses "B|"
