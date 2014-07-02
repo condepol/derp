@@ -1,3 +1,6 @@
+# C'est le premier script que j'ai fait.
+# Il m'a servi a identifier les noms de champs et filtres à utiliser.
+# À ne pas utiliser
 for i in `find $1 -type f -name \*.cap `;
 do
   echo $i ;

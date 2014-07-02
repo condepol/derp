@@ -1,3 +1,11 @@
+#!/bin/sh
+#
+# Ce script ne passe qu'une fois sur les .cap du dossier passé en paramètre.
+# Il est plus rapide que les autres, mais met tous les champs nommés 'text' dans text.txt
+# Or, plusieurs types de paquets ont des champs nommés text.
+#
+# Si on n'est pas pressé par le temps, mieux vaut utiliser les autres
+
 rm -f dhcp-pre.txt dns-pre.txt text.txt dns.txt dhcp.txt analysis.txt
 
 for i in `find $1 -type f -name \*.cap `;
