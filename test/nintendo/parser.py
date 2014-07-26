@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+# generate nintendo.data from a capture file
+#   tshark -r nintendo.probes.pcapng  -Tfields -Eoccurrence=a -Equote=n  -e "wlan_mgt.tag.vendor.data" > nintendo.data
+
+# generate a cool colored hexdump 
+# for i in `cat nintendo.data | tr -d ':' `; do echo -n $i | hex -d | ../hd/executable >> nintendo.hexdump; done;
+
 import os
 import sys
 import struct
