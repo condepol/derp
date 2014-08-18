@@ -12,10 +12,8 @@ import struct
 
 class Service:
   def __init__(self,data,index):
-    self.first_byte, self.serviceID, self.flags = struct.unpack('>BHH',data[index:index+5])
-    # Not sure about this one, it could be a titleID trickery
-    assert(self.first_byte == 0)
-    # Check for new flag
+    self.titleID, self.flags = struct.unpack('>IB',data[index:index+5])
+    # Check for new flag (science !)
     assert((0x32 | self.flags) == 0x32)
 
     self.length = 5
@@ -26,7 +24,7 @@ class Service:
       self.length += 6
 
   def __str__(self):
-    return '{:04x}-{:08b}'.format(self.serviceID,self.flags)
+    return '{:04x}-{:08b}'.format(self.titleID,self.flags)
 
 class ConsoleID:
   def __init__(self,data):
