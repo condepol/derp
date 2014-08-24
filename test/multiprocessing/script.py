@@ -12,7 +12,8 @@ def work(*params):
 
 if __name__ == '__main__':
   pool = multiprocessing.Pool()
-  wolk = pool.apply_async(work,(4,5,6))
-  a = wolk.get()
-  print(a)
+  todo = range(15)
+  wolks = [pool.apply_async(work,(todo[i],5,6)) for i in todo]
+  results  = [wolk.get() for wolk in wolks]
+  print(results)
 
