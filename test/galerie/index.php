@@ -22,7 +22,7 @@
 
 ?>
     ];
-    var index = 50;
+    var index = 0;
     function refresh () {
       if (index < 0) {
         index = 0;
@@ -39,14 +39,17 @@
     }
     </script>
     <style>
-      .window {width: 100%; height: 90%; float:left;}
+      html {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
+      body {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
+      div {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
+      img {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px; height: 100%;}
+      .window {width: 100%; height: 100%; float:left; margin: 0px 0px 0px 0px}
       .left   {width: 50px; height: 50px; background: #faa; position:absolute; top: 0px; right: 50px; text-align: center;font-size: 2em;}
       .right  {width: 50px; height: 50px; background: #afa; position:absolute; top: 0px; right:  0px; text-align: center;font-size: 2em;}
       .filename {background: #ddd; opacity: 0.8; position: absolute; top: 70px; right: 0px;}
       .index    {background: #ddd;; position: absolute; top: 50px; right: 0px;   height: 20px;font-size: 15px; width : 100px; text-align: center;}
       .progress-bg  {background: #f88; position: absolute; top: 67px; right: 0px; height: 3px; width: 100px;}
       .progress     {background: #8f8; position: absolute; top: 67px; right: 0px; height: 3px;}
-      img {height: 100%;}
     </style>
   </head>
   <body>
