@@ -25,10 +25,10 @@
     var index = 0;
     function refresh () {
       if (index < 0) {
-        index = 0;
+        index = images.length - 1;
       } else {
-        if (index > images.length) {
-          index = images.length - 1;
+        if (index > images.length - 1) {
+          index = 0;
         }
       }
       document.getElementById("the_image").src = "<?php echo $dirname; ?>/" + images[index];
@@ -42,7 +42,7 @@
       html {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
       body {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
       div {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;}
-      img {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px; height: 100%;}
+      img {margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px; max-width: 100%;max-height:100%;}
       .window {width: 100%; height: 100%; float:left; margin: 0px 0px 0px 0px}
       .left   {width: 50px; height: 50px; background: #faa; position:absolute; top: 0px; right: 50px; text-align: center;font-size: 2em;}
       .right  {width: 50px; height: 50px; background: #afa; position:absolute; top: 0px; right:  0px; text-align: center;font-size: 2em;}
