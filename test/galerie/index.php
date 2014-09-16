@@ -22,7 +22,7 @@
 
 ?>
     ];
-    var index = 0;
+    var index = <?php if (isset($_GET['id']) and (preg_match('/^[0-9]*$/',$_GET['id']))) {echo $_GET['id'];} else {echo "0";}?>;
     function refresh () {
       if (index < 0) {
         index = images.length - 1;
