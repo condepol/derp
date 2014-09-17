@@ -7,6 +7,8 @@ import random
 def derp():
 
   if (random.uniform(0,1)<0.1):
+    return "\x1b[3{};4{}m".format(random.randrange(10),random.randrange(10))
+  if (random.uniform(0,1)<0.1):
     message = random.choice([ 
   "\x07",#     BEL beeps;
   "\x08",#     BS  backspaces one column (but not past the beginning of the line);
@@ -65,7 +67,7 @@ def derp():
 
 try:
   while True:
-    print("%sderp"%(derp()))
+    print("{}derp".format(derp()))
     time.sleep(0.1)
 except KeyboardInterrupt:
   pass
