@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+import sys
+import codecs
+
+step    = 16
+data    = sys.stdin.buffer.read(step)
+offset  = 0
+
+codepages = ['cp037','cp1006','cp1026','cp1125','cp1140','cp1256','cp273','cp437','cp500','cp720','cp737','cp775','cp850','cp852','cp855','cp858','cp860','cp861','cp862','cp863','cp865','cp866','cp875']
+#encoding = 'default'
+#encoding = 'unicode'
+#encoding = 'cp866'
+
+if len(sys.argv) > 1:
+  if sys.argv[1] in ['default','unicode']+codepages:
+    encoding = sys.argv[1]
+
+def encode(c):
+  if   encoding == 'default':
+    if 0x1f < c < 0x7f: return chr(c)
+  elif encoding == 'unicode':
+    if c != 0x7f and 0x1f < (c%0x80): return chr(c)
+  elif encoding in codepages:
+    if c > 0x20: return codecs.decode(bytes([c]),encoding)
+  return '.'
+
+def printe(data):
+  if len(data) == 0: return
+  print('{:08x}  {:49s} |{}|'.format(
+    offset,
+    ' '.join([
+      ' '.join(['{:02x}'.format(c) for c in data[:8]]),
+      ' '.join(['{:02x}'.format(c) for c in data[8:]]),
+    ]),
+    ' '.join([
+      ''.join([encode(c) for c in data[:8]]),
+      ''.join([encode(c) for c in data[8:]]),
+    ])
+    ))
+
+while len(data) == step:
+  printe(data)
+  data = sys.stdin.buffer.read(step)
+  offset += step
+
+printe(data)

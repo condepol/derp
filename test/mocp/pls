@@ -1,0 +1,37 @@
+# Black theme by Arn <arn.alduomacil@gmail.com>
+
+background          = white   black
+frame               = white   black
+window_title        = white   black
+directory           = white   black
+selected_directory  = blue   black
+playlist            = white   black
+selected_playlist   = white   black
+file                = white   black
+selected_file       = green   black
+selected_info       = blue    black bold
+marked_file         = green   black bold
+marked_info         = green black
+marked_selected_file = green black bold
+marked_selected_info = blue black
+info                = white   black underline
+status              = white   black
+title               = green   black bold
+state               = white   black
+current_time        = white   black bold
+time_left           = white   black
+total_time          = white   black
+time_total_frames   = white   black
+sound_parameters    = white   black
+legend              = white   black
+disabled            = white   black
+enabled             = green   black
+empty_mixer_bar     = white   black
+filled_mixer_bar    = white   black reverse
+empty_time_bar      = white   black
+filled_time_bar     = white   blue
+entry               = white   black
+entry_title         = white   black
+error               = white   black bold,underline
+message             = white   black
+plist_time          = white   black
