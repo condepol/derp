@@ -9,7 +9,8 @@ data    = sys.stdin.buffer.read(step)
 offset  = 0
 
 codepages = ['cp037','cp1006','cp1026','cp1125','cp1140','cp1256','cp273','cp437','cp500','cp720','cp737','cp775','cp850','cp852','cp855','cp858','cp860','cp861','cp862','cp863','cp865','cp866','cp875']
-#encoding = 'default'
+
+encoding = 'default'
 #encoding = 'unicode'
 #encoding = 'cp866'
 
