@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# coding: utf-8
+import sys,os
+try:
+  ps = int(sys.argv[1])
+  label = " ".join(sys.argv[2:])
+except:
+  ps = 65
+  label = " ".join(sys.argv[1:])
+if label.strip() == '': label='lol'
+tt="/tmp/a.png"
+os.system('convert -background white -font Symbola-Regular -pointsize {:d} label:"{}" {}; /home/antoine/test/uniqueode_draw/bitmap_to_braille.py {}'.format(ps,label,tt,tt))
+

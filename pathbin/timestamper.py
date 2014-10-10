@@ -1,41 +1,39 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # coding: utf-8
-import sys
-import time
-import struct
-import binascii
-
-def iscool(c):
-  return (0x1f<c and c<0x7f)
-def issupercool(b):
-  return (sum(1*(ord('A')<j and j<ord('z')) for j in b) == len(b))
-
-def safe(d):
-  r = ''
-  for i in d:
-    if iscool(ord(i)):
-      r += ' '+i
+import sys,time,struct,codecs
+def S(t): return ''.join([[chr(byte) if (byte % 0x80) > 0x1f else '\x1b[31m{:02x}\x1b[0m'.format(byte)][0] for byte in struct.pack('>I',t)])
+def pr(t): print('{:30s} {:08x} {}'.format(time.strftime("%F %T %A",time.gmtime(t)),t,S(t)))
+def cases(s,t=0):
+  if t == len(s):return [s]
+  return [i for i in cases(s[:t]+s[t].upper()+s[t+1:],t+1)] + [i for i in cases(s[:t]+s[t].lower()+s[t+1:],t+1)]
+def b(x):return [(ord(c)%256) for c in x]
+for i in sys.argv[1:]:
+  if len(i) == 4:
+    for z in cases(i):
+      pr(struct.unpack('>I',bytes(b(z)))[0])
+  elif i =='now':
+    pr(int(time.time()))
+  elif i[:5] == 'years':
+    if len(i) == 8:
+      for x in range(256):
+        pr(struct.unpack('>I',bytes([x]+b(i[-3:])))[0])
+    elif len(i) == 11:
+      for x in range(256):
+        pr(struct.unpack('>I',bytes([x])+codecs.decode(i[-6:],'hex'))[0])
     else:
-      r += binascii.hexlify(i)
-  return r
-
-if len(sys.argv) == 1:
-  data = sys.stdin.read(5)
-  while len(data) == 5:
-    print safe(data[:4]),':',time.ctime(struct.unpack('>I',data[:4])[0])
-    data = sys.stdin.read(5)
-
-else:
-  t = time.time()
-  if sys.argv[1] == "now":
-    print(time.ctime(t))
-    print(struct.pack('>I',t))
-  elif sys.argv[1] == "next":
-    t = time.time()
-    # FUCKING BRUTEFORCE I HAVE NO BRAIN
-    while not issupercool([ord(i) for i in struct.pack('>I',t)]):
-      t += 1
-    print(time.ctime(t))
-    print(struct.pack('>I',t))
-      
-    
+      for z in range(256):
+        pr(z<<24)
+  elif i[:6] == 'months':
+    p = int(time.time()) & 0xff000000 if len(i) == 6 else ord(i[-1])<<24
+    for z in range(256):
+      pr(p+(z<<16))
+  elif len(i) == 1:
+    for encoding in ['utf8','utf_16_le','utf_32_le']:
+      z = bytes(i,encoding)
+      pr(struct.unpack('>I',z+bytes([0]*(4-len(z))))[0])
+  elif '-' in i and len(i.split('-')) == 3:
+    y,m,d = (int(z) for z in i.split('-'))
+    pr(int(time.mktime((y,m,d,0, 0, 0, 0,0,0))))
+    pr(int(time.mktime((y,m,d,22,59,59,0,0,0))))
+  elif len(i) == 8 or (len(i) == 10 and i[:2].lower() == '0x'):
+    pr(struct.unpack('>I',codecs.decode(i[-8:],'hex'))[0])

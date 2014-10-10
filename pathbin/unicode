@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2.7
 
 
 import os, glob, sys, unicodedata, locale, gzip, re, traceback, encodings

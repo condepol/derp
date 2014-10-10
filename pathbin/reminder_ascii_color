@@ -1,26 +1,20 @@
-#!/usr/bin/python2.7
-# -*- coding: utf-8 -*-
+#!/usr/bin/python3
+# coding: utf-8
 
-def safe(c):
-  if c > 0x1f and c < 0x7f:
-    return chr(c)
-  return '.'
+def safe(c): return '.' if c % 0x80 < 0x20 or c==0x7f else chr(c)
 
 def table_ascii():
-  return '  '+' '.join([hex(i)[2] for i in xrange(0x10)])+"\n"+"\n".join([str(j/16)+" "+' '.join([safe(i+j) for i in xrange(0x10)]) for j in xrange(0x20,0x80,0x10)])
+  return ''.join([
+    ' {}\n'.format(''.join(['{:2x}'.format(i) for i in range(16)])),
+    '\n'.join(['{:x} {}'.format(line,' '.join([safe(16*line+i) for i in range(16)])) for line in range(16)])
+  ])
 
-def table_color():
-  return "\x1b[0m\n".join(['\x1b[0m '.join(['\x1b[3'+str(fg)+';4'+str(bg)+'m'+str(fg)+str(bg) for fg in xrange(9)]) for bg in xrange(9) ])+"\x1b[0m"
+def table_color():return '\n'.join([' '.join(['\x1b[3{fg:d};4{bg:d}m{fg:d}{bg:d}\x1b[0m '.format(fg=fg,bg=bg) for fg in range(10)]) for bg in range(10)])
 
 def mergeblocks(a,b):
   a = a.splitlines()
   b = b.splitlines()
-  while len(a) < len(b):
-    a.append(" "*len(a[0]))
-  while len(a) > len(b):
-    b.append(" "*len(b[0]))
+  while len(a) > len(b): b.append('')
+  return '\n'.join([' '.join([a[i],b[i]]) for i in range(len(b))])
 
-  return '\n'.join(['\t'.join([a[i],b[i]]) for i in xrange(len(b))])
-
-
-print mergeblocks(table_ascii(), table_color())
+print(mergeblocks(table_ascii(), table_color()))
