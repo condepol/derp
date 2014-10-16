@@ -1,13 +1,29 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import sys,os
+import subprocess
+# font
+fonts = subprocess.check_output('convert -list font | grep Font: | grep -o "[^ ]*$"',shell=True).splitlines()
+fonts = [str(i,'utf8') for i in fonts]
+font = 'Symbola-Regular'
+args = sys.argv[1:]
+for f in fonts:
+  if sys.argv[1].lower() in f.lower():
+    print(f)
+    font = f
+    args = sys.argv[2:]
+
+# size
 try:
-  ps = int(sys.argv[1])
-  label = " ".join(sys.argv[2:])
+  ps = int(args[0])
+  label = " ".join(args[1:])
 except:
   ps = 65
-  label = " ".join(sys.argv[1:])
+  label = " ".join(args)
+
+# text
 if label.strip() == '': label='lol'
+
 tt="/tmp/a.png"
-os.system('convert -background white -font Symbola-Regular -pointsize {:d} label:"{}" {}; /home/antoine/test/uniqueode_draw/bitmap_to_braille.py {}'.format(ps,label,tt,tt))
+os.system('convert -background white -font {} -pointsize {:d} label:"{}" {}; /home/antoine/test/uniqueode_draw/bitmap_to_braille.py {}'.format(font,ps,label,tt,tt))
 

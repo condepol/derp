@@ -13,6 +13,10 @@ for i in sys.argv[1:]:
       pr(struct.unpack('>I',bytes(b(z)))[0])
   elif i =='now':
     pr(int(time.time()))
+  elif i == 'today':
+    now = time.gmtime()
+    pr(int(time.mktime((now.tm_year,now.tm_mon,now.tm_mday,1,0,0,0,0,0))))
+    pr(int(time.mktime((now.tm_year,now.tm_mon,now.tm_mday,24,59,59,0,0,0))))
   elif i[:5] == 'years':
     if len(i) == 8:
       for x in range(256):
@@ -33,7 +37,7 @@ for i in sys.argv[1:]:
       pr(struct.unpack('>I',z+bytes([0]*(4-len(z))))[0])
   elif '-' in i and len(i.split('-')) == 3:
     y,m,d = (int(z) for z in i.split('-'))
-    pr(int(time.mktime((y,m,d,0, 0, 0, 0,0,0))))
-    pr(int(time.mktime((y,m,d,22,59,59,0,0,0))))
+    pr(int(time.mktime((y,m,d,1, 0, 0, 0,0,0))))
+    pr(int(time.mktime((y,m,d,24,59,59,0,0,0))))
   elif len(i) == 8 or (len(i) == 10 and i[:2].lower() == '0x'):
     pr(struct.unpack('>I',codecs.decode(i[-8:],'hex'))[0])
