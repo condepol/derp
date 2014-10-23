@@ -17,6 +17,7 @@ encoding = 'default'
 if len(sys.argv) > 1:
   if sys.argv[1] in ['default','unicode']+codepages:
     encoding = sys.argv[1]
+  encoding = sys.argv[1]
 
 def encode(c):
   if   encoding == 'default':

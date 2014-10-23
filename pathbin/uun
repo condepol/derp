@@ -1,2 +1,2 @@
 #!/bin/bash
-grep -i $1 ~/unicode.txt
+grep -a -i "$1" ~/unicode.txt

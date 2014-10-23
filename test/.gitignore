@@ -1,2 +1,6 @@
 # vim
 .*.swp
+*/*a.out
+**a.out
+*a.out
+a.out

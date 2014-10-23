@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+# coding: utf-8
+import sys
+
+with open('/home/antoine/unicode.txt') as o:
+  lines = [i.strip() for i in o.readlines() if len(i.strip()) != 0]
+
+with open('/home/antoine/.unicode/Unihan_Readings.txt') as o:
+  docs = [i.strip() for i in o.readlines() if 'kDefinition' in i]
+
+def name(x):
+  letters = [l for l in lines if l[-1] == x]
+  if len(letters) == 1: return letters[0]
+
+def doc(cp):
+  x = 'U+{:04X}\t'.format(cp)
+  da = [d for d in docs if x in d]
+  if len(da) == 1:
+    if '\t' in da[0]:
+      return da[0].split('\t')[-1]
+
+for letter in " ".join(sys.argv[1:]):
+  cp = ord(letter)
+  n = name(letter)
+  d = doc(cp)
+  print(n,d)

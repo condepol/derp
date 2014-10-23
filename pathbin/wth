@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+import sys
+
+with open('/home/antoine/.unicode/Unihan_Readings.txt') as o:
+  docs = [i.strip() for i in o.readlines() if 'kDefinition' in i]
+
+class Line:
+  def __init__(self,l):
+    self.c ,k, self.d = l.strip().split('\t')
+    self.cp = int(self.c.split('U+')[-1],16)
+  def __str__(self):
+    return '{} {} {}'.format(self.c,chr(self.cp),self.d)
+
+def f(word):
+  lines = [Line(i) for i in docs if word.lower() in i]
+  return lines
+
+def doc(cp):
+  x = 'U+{:04X}\t'.format(cp)
+  da = [d for d in docs if x in d]
+  if len(da) == 1:
+    if '\t' in da[0]:
+      return da[0].split('\t')[-1]
+
+for word in sys.argv[1:]:
+  print('«\x1b[31m{}\x1b[0m»'.format(word))
+  print('\n'.join(['{}'.format(i) for i in f(word)]))
