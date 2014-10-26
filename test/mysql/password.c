@@ -22,7 +22,7 @@ void hash_password(unsigned int *result, const char *password, unsigned int pass
   const char *password_end= password + password_len;
   for (; password < password_end; password++)
   {
-    printf("%2d %08x %08x\n", i++, nr, nr2);
+    //printf("%2d %08x %08x\n", i++, nr, nr2);
     if (*password == ' ' || *password == '\t')
       continue;                                 /* skip space in password */
     tmp= (unsigned int) (unsigned char) *password;

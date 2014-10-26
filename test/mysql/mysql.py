@@ -22,14 +22,12 @@ def hash_password(password):
   B=0x12345671
   i = 0
   for letter in password:
-    print("{:2d} {:08x} {:08x} {:8x}".format(i,A,B,add),end=" ")
     # skip space in password
     if letter not in [ord(' '),ord('\t')]:
       bits = (A & 63)
       factor = bits + add
       key = letter * factor
       xor = (key + (A<<8)) % (1<<32)
-      print('{:06b} {:02x} {} {:4x} {:5x} {:08x}'.format(bits,letter,s(letter),factor,key,xor))
       A = A ^ xor
       B = ((B<<8)^A) + B
       A = A % (1<<32)
@@ -46,11 +44,4 @@ if __name__ == '__main__':
     i = sys.stdin.buffer.read()
   else:
     i = bytes(sys.argv[1],'utf8')
-  o = "{:08x}{:08x}".format(*hash_password(i))
-  # whatthehell
-  if o == "0a6ffbf026b9eb69":
-    print('\x1b[32mOK\x1b[0m')
-  else:
-    print('\x1b[31mfail\x1b[0m')
-  print(o)
-
+  print("{:08x}{:08x}".format(*hash_password(i)))
