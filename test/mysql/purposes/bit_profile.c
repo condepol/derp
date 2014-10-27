@@ -58,15 +58,19 @@ int main ( int argc, char * argv [] ) {
   unsigned int i = 0;
   unsigned char charset[256];
   unsigned int test[2];
-  unsigned char * passtest = "whatthehell\xea\x8a\x80\xf0\x90\x8c\x88\xdc\x97\xea\xa2\x8b";
+  unsigned char * passtest = (unsigned char *)"whatthehell\xea\x8a\x80\xf0\x90\x8c\x88\xdc\x97\xea\xa2\x8b";
 
   if (argc == 1) {
     printf("Usage : %s length [charset]",argv[0]);
     return EXIT_FAILURE;
   }
 
-  hash_password(test,passtest,strlen(passtest));
-  printf("%s : %08x%08x\n",passtest,test[0],test[1]);
+  hash_password(test,passtest,strlen((const char *)passtest));
+  if ((0x3156b6da != test[0]) & (0x309c2038 != test[1])) {
+    printf("%s != %08x%08x\n",passtest,0x3156b6da,0x309c2038);
+    printf("%s =? %08x%08x\n",passtest,test[0],test[1]);
+    return EXIT_FAILURE;
+  }
     
   memset(profile,0,64*sizeof(unsigned int));
   for (i=0;i<256;i++) {charset[i] = (unsigned char)i;}
@@ -74,9 +78,8 @@ int main ( int argc, char * argv [] ) {
   if (argc == 2) {
     bruteforce(profile,tested,tested_length,0,charset,255);
   } else {
-    bruteforce(profile,tested,tested_length,0,(unsigned char *)argv[2],strlen(argv[2]));
+    bruteforce(profile,tested,tested_length,0,(unsigned char *)argv[2],strlen(argv[2])-1);
   }
-  for (i=0;i<32;i++) {printf("%3x ",profile[i]);}printf("\n");
-  for (i=32;i<64;i++) {printf("%3x ",profile[i]);}printf("\n");
+  for (i=0;i<64;i++)    {printf("%x\n",profile[i]);}
   return EXIT_SUCCESS;
 }

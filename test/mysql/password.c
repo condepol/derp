@@ -19,7 +19,7 @@ void hash_password(unsigned int *result, const char *password, unsigned int pass
   register unsigned int nr=1345345333L, add=7, nr2=0x12345671L;
   unsigned int tmp;
   unsigned int i = 0;
-  const char *password_end= password + password_len;
+  const char *password_end = password + password_len;
   for (; password < password_end; password++)
   {
     //printf("%2d %08x %08x\n", i++, nr, nr2);
@@ -35,11 +35,11 @@ void hash_password(unsigned int *result, const char *password, unsigned int pass
 }
 
 int main ( int argc, char * argv [] ) {
+  unsigned int hash[2] = {0,0};
   if (argc == 1) {
     printf("Usage : %s <password>",argv[0]);
     return EXIT_FAILURE;
   }
-  unsigned int hash[2] = {0,0};
   hash_password(hash, argv[1], strlen(argv[1]));
   printf("%08x%08x\n", hash[0], hash[1]);
 }
