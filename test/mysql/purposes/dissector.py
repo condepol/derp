@@ -47,9 +47,9 @@ if __name__ == '__main__':
     i = bytes(sys.argv[1],'utf8')
   o = "{:08x}{:08x}".format(*hash_password(i))
   # whatthehell
-  if o == "0a6ffbf026b9eb69":
-    print('\x1b[32mOK\x1b[0m')
-  else:
-    print('\x1b[31mfail\x1b[0m')
+  #if o == "0a6ffbf026b9eb69":
+  #  print('\x1b[32mOK\x1b[0m')
+  #else:
+  #  print('\x1b[31mfail\x1b[0m')
   print(o)
 
