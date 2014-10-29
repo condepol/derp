@@ -3,92 +3,114 @@ import sys
 import codecs
 import struct
 
-def step(a,b,c,k):
-  a = (a ^ (k*((a&63)+c))+ (a<<8)) % (1<<32)
-  b = (((b<<8)^a)+b) % (1<<32)
-  return a & (( 1 << 31) -1), b & (( 1 << 31) -1)
+class State:
+  def __init__(self,a,b,c,k,charset):
+    self.a = a
+    self.b = b
+    self.c = c
+    self.k = k
+    self.charset = charset
 
-def ancient(A,B,last_acc,key):
-  # check that this acc and this key lead to valid reverse
-  δ =  A      % 256
-  γ = (A>>8 ) % 256
-  β = (A>>16) % 256
-  α = (A>>24) % 256
+  def is_initial(self):
+    if self.c == 7:
+      if self.a == 0x50305735:
+        if self.b == 0x12345671:
+          return True
+    return False
+  
+  def __eq__(self,x):
+    if self.a == x.a:
+      if self.b == x.b:
+        if self.c == x.c:
+          if self.k == x.k:
+            return True
+    return False
 
-  # this may or may not be ugly
-  for six_bits in range(1<<7):
-    Z = key * (last_acc - key + six_bits)
-    z0, z1, z2 = Z % 256, (Z >> 8) % 256, (Z >> 16) % 256
-    d = δ ^ z0
-    if d & 0b111111 == six_bits:
-      break
+  def child(self,k):
+    # one round of mysql323
+    a, b, c = self.a, self.b, self.c
+    a = ((a ^ (k* ((a&63) + c)) + (a<<8)) %(1<<32)) & 0x7fffffff
+    b = ((((b<<8) ^ a) + b) %(1<<32)) & 0x7fffffff
+    c += k
+    return State(a,b,c,k,self.charset)
 
-  new_acc = last_acc - key
-  # original acc was 7, we shouldn't go below
-  if new_acc < 7: return
-  two_bytes = ((d << 8) + Z) % 0x10000
-  c = ((two_bytes >> 8) % 256) ^ γ
-  three_bytes = (((c<<16)+(d<<8)) + Z) % 0x1000000
-  b = ((three_bytes >> 16) % 256) ^ β
-  a = b ^ α
-  nA = ((a<<24) + (b<<16) + (c<<8) + d) & 0x7fffffff
-  # once we have recovered A, we have to recover B
-  θ =  B      % 256
-  η = (B>>8 ) % 256
-  ζ = (B>>16) % 256
-  ε = (B>>24) % 256
-  h = ( θ -      δ)   % 256
-  g = ( η - (h ^ γ) -1) % 256 # i have no idea why the -1 helps
-  f = ( ζ - (g ^ β) -1) % 256 # i have no idea why the -1 helps
-  e = ( ε - (f ^ α) -1) % 256 # i have no idea why the -1 helps
-  nB = ((e<<24) + (f<<16) + (g<<8) + h) & 0x7fffffff
-  # now we have A, B and key plus new_acc,
-  # we have to check
-  xA,xB = step(nA,nB,new_acc,key)
-  if (xA == A) and (xB == B):
-    return nA,nB,new_acc,key
+  def parents(self):
+    for key in self.charset:
+      for ancient in self.ancients(key):
+        yield x
 
-  #print(' '.join(
-  #  ['{:08x}'.format(i) for i in [A,B,nA,nB,xA,xB,xA^A]] + 
-  #  ['{}'.format(i) for i in [last_acc,new_acc,key]]
-  #  ))
-
-def salmon(stuff,charset,level=0):
-  for A,B,acc,key in stuff:
-    if acc < 7:
-      pass
-    elif A == 0x50305735 and B == 0x12345671:
-      print('Won. {} {}'.format(acc,key))
-    else:
-      print((" "*level)+'{:08x} {:08x} {:x} {:x} {}'.format(A,B,acc,key,chr(key)))
-      this = []
-      for k in charset:
-        new = ancient(A,B,acc,k)
-        if new is not None:
-          this.append(new)
-      salmon(this,charset,level+1)
-
-
-def crack(hash,charset,max_sum=0x1000):
-  assert(len(hash) == 16)
-  A,B = struct.unpack('>II',codecs.decode(hash,'hex'))
-  print('{:08x}{:08x}'.format(A,B))
-  # 1. find starting points
-  starting_points = []
-  skipped = 0
-  for last_acc in range(max_sum):
-    for key in charset:
-      new = ancient(A,B,last_acc,key)
-      if new is not None:
-        starting_points.append(new)
+  def ancients(self,k):
+    'return possible states'
+    # cut the bytes of A
+    α,β,γ,δ = struct.unpack('<4B',struct.pack('<I',self.a))
+    # get the previous accumulator state
+    acc = self.c - k
+    # if we are below 7, the key is too big
+    if acc < 7: return
+    # identify the possible d values
+    def possible_d():
+      for d in bytes(range(256)):
+        z = k * (acc + (d&63))
+        if (z % 256) ^ δ == d:
+          yield d
+    # deduce entire c,b,a from d
+    for d in possible_d():
+      # recover the 'z' factor
+      z = key * (acc - k + (d&63))
+      # recover c
+      # γδ = (d0)*z ^ cd
+      # cd = γδ ^ (d0)*z
+      cd = ((γ<<8)+δ) ^ ((d<<8)*z)
+      c = (cd>>8)%256
+      # recover b
+      # βγδ = bcd ^ (cd0 * z)
+      # bcd = βγδ ^ (cd0 * z)
+      βγδ = (β<<16)+(γ<<8)+δ
+      bcd = βγδ ^ (((c<<16)+(d<<8))*z)
+      b = (bcd>>16)%256
+      # αβγδ = abcd ^ (bcd0 * z)
+      # abcd = αβγδ ^ (bcd0 * z)
+      αβγδ = struct.unpack('<I',struct.pack('<B',α,β,γ,δ)) & 0x7fffffff
+      abcd = αβγδ ^ (((b<<24)+(c<<16)+(d<<8))*z) & 0x7fffffff
+      a = (abcd>>24)%256
+      na = struct.unpack('<I',struct.pack('<B',a,b,c,d)) & 0x7fffffff
+      # TODO I STOPPED HERE
+      # once we have recovered A, we have to recover B
+      ε,ζ,η,θ = struct.unpack('<4B',struct.pack('<I',self.b))
+      h = ( θ -      δ)   % 256
+      g = ( η - (h ^ γ) -1) % 256 # i have no idea why the -1 helps
+      f = ( ζ - (g ^ β) -1) % 256 # i have no idea why the -1 helps
+      e = ( ε - (f ^ α) -1) % 256 # i have no idea why the -1 helps
+      nb = struct.unpack('<I',struct.pack('<B',e,f,g,h)) & 0x7fffffff
+      # check correctness of reverse
+      s = State(na,nb,acc,key,self.charset)
+      if self == s.child(k)
+        yield State(na,nb,acc,key)
       else:
-        skipped += 1
-  print('Found {} starting points, skipped {}.'.format(len(starting_points),skipped))
-  salmon(starting_points,charset)
+        print('Noes !')
+
+def crack(hash,charset,lenmax):
+  assert(len(hash) == 16)
+  b,a = struct.unpack('<II',struct.pack('<Q',int(hash,16)))
+  print('Cracking hash «{:08x}{:08x}»'.format(a,b))
+  print('Charset : {}'.format(charset))
+  print('Max acc : {}'.format(lenmax))
+
+  for last_acc in range(7,lenmax):
+    for key in charset:
+      s = State(a,b,last_acc,key,charset)
 
 if __name__ == '__main__':
   import sys
-  charset = bytes(range(ord('A'),ord('Z')))
-  # crack('606707d16665cd42',charset)
-  #crack('086fecf00b799509',bytes(range(ord('A'),ord('D')+1)),400)
-  crack(sys.argv[1],bytes(range(ord('A'),ord('D')+1)),400)
+  # ABCD
+  hash = '086fecf00b799509' if len(sys.argv) < 2 else sys.argv[1]
+  # protip : use « ÿ» for 0x20->0xff «\ ÿ» in a shell
+  charset = 'AD' if len(sys.argv) < 3 else sys.argv[2][:2]
+  charset = bytes(range(ord(charset[0]),ord(charset[1])+1))
+  # Number of characters max in the password to recover
+  # This defines the size of the tree
+  lenmax  = 6 if len(sys.argv) < 4 else int(sys.argv[3])
+  # final acc = 7 + sum(ord(letter) for letter in password)
+  # thus, taking the max value of the charset give us the max bound :
+  lenmax  = 7 + (max(charset) * lenmax)
+  crack(hash,charset,lenmax)
