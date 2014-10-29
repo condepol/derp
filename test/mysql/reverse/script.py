@@ -3,6 +3,11 @@ import sys
 import codecs
 import struct
 
+def pack(*k):
+  x = 0
+  for i in k: x = (x<<8) + i
+  return x & 0x7fffffff
+
 class State:
   def __init__(self,a,b,c,k,charset):
     self.a = a
@@ -10,6 +15,12 @@ class State:
     self.c = c
     self.k = k
     self.charset = charset
+  def __str__(self):
+    return '\x1b[32m{:08x}\x1b[34m{:08x} \x1b[31m{:4x}\x1b[0m {:x}'.format(
+        self.a,
+        self.b,
+        self.c,
+        self.k)
 
   def is_initial(self):
     if self.c == 7:
@@ -37,12 +48,13 @@ class State:
   def parents(self):
     for key in self.charset:
       for ancient in self.ancients(key):
-        yield x
+        yield ancient
 
   def ancients(self,k):
     'return possible states'
     # cut the bytes of A
-    α,β,γ,δ = struct.unpack('<4B',struct.pack('<I',self.a))
+    α,β,γ,δ = struct.unpack('4B',struct.pack('>I',self.a))
+    assert(pack(α,β,γ,δ) == self.a)
     # get the previous accumulator state
     acc = self.c - k
     # if we are below 7, the key is too big
@@ -55,37 +67,75 @@ class State:
           yield d
     # deduce entire c,b,a from d
     for d in possible_d():
+      # i think this whole step could be done more elegantly
       # recover the 'z' factor
-      z = key * (acc - k + (d&63))
+      z = k * (acc + (d&63))
       # recover c
-      # γδ = (d0)*z ^ cd
-      # cd = γδ ^ (d0)*z
-      cd = ((γ<<8)+δ) ^ ((d<<8)*z)
+      # γδ = (d0)+z ^ cd
+      # cd = γδ ^ (d0)+z
+      cd = pack(γ,δ) ^ (pack(d,0)+z)
+      assert(cd % 256 == d)
       c = (cd>>8)%256
       # recover b
-      # βγδ = bcd ^ (cd0 * z)
-      # bcd = βγδ ^ (cd0 * z)
-      βγδ = (β<<16)+(γ<<8)+δ
-      bcd = βγδ ^ (((c<<16)+(d<<8))*z)
+      # βγδ = bcd ^ (cd0 + z)
+      # bcd = βγδ ^ (cd0 + z)
+      bcd = pack(β,γ,δ) ^ (pack(c,d,0)+z)
+      assert(bcd % 0x10000 == cd)
       b = (bcd>>16)%256
-      # αβγδ = abcd ^ (bcd0 * z)
-      # abcd = αβγδ ^ (bcd0 * z)
-      αβγδ = struct.unpack('<I',struct.pack('<B',α,β,γ,δ)) & 0x7fffffff
-      abcd = αβγδ ^ (((b<<24)+(c<<16)+(d<<8))*z) & 0x7fffffff
+      # αβγδ = abcd ^ (bcd0 + z)
+      # abcd = αβγδ ^ (bcd0 + z)
+      abcd = pack(α,β,γ,δ) ^ (pack(b,c,d,0)+z) & 0x7fffffff
       a = (abcd>>24)%256
-      na = struct.unpack('<I',struct.pack('<B',a,b,c,d)) & 0x7fffffff
-      # TODO I STOPPED HERE
+      # this is not optimal, but i won't optimize yet
+      na = pack(a,b,c,d)
+      try:
+        assert(abcd == na)
+      except Exception as e:
+        print('{:08x} != {:08x} {:02x}{:02x}{:02x}{:02x}'.format(abcd,na,a,b,c,d))
+        raise e
+
       # once we have recovered A, we have to recover B
-      ε,ζ,η,θ = struct.unpack('<4B',struct.pack('<I',self.b))
-      h = ( θ -      δ)   % 256
-      g = ( η - (h ^ γ) -1) % 256 # i have no idea why the -1 helps
-      f = ( ζ - (g ^ β) -1) % 256 # i have no idea why the -1 helps
-      e = ( ε - (f ^ α) -1) % 256 # i have no idea why the -1 helps
-      nb = struct.unpack('<I',struct.pack('<B',e,f,g,h)) & 0x7fffffff
+      ε,ζ,η,θ = struct.unpack('4B',struct.pack('>I',self.b))
+      # θ = h + δ
+      # h = θ - δ
+      h = ( θ - δ ) % 256
+      # ηθ = gh + (γδ ^ h0)
+      # gh = ηθ - (γδ ^ h0)
+      gh = (pack(η,θ) - (pack(h,0) ^ pack(γ,δ)))%0x10000
+      g = (gh >> 8) % 256
+      assert( gh % 0x100 == h )
+      # ζηθ = (gh0 ^ βγδ) + fgh
+      # fgh = ζηθ - (gh0 ^ βγδ)
+      fgh = (pack(ζ,η,θ) - (pack(g,h,0) ^ pack(β,γ,δ)))%0x1000000
+      f = (fgh >> 16)%256
+      assert( fgh % 0x10000 == gh)
+      
+      # εζηθ = efgh + (fgh0 ^ αβγδ)
+      # efgh = εζηθ - (fgh0 ^ αβγδ)
+      # efgh = (fgh0 ^ αβγδ) - εζηθ
+      efgh = (pack(ε,ζ,η,θ) - (pack(f,g,h,0) ^ pack(α,β,γ,δ))) & 0x7fffffff
+      e = (efgh >> 24)%256
+      try:
+        assert(efgh % 0x1000000 == fgh)
+      except Exception as ex:
+        print('{:08x}'.format(abcd))
+        print('{:08x} {:06x}'.format(efgh,fgh))
+        raise ex
+      nb = pack(e,f,g,h)
+      assert(efgh == nb)
+
       # check correctness of reverse
-      s = State(na,nb,acc,key,self.charset)
-      if self == s.child(k)
-        yield State(na,nb,acc,key)
+      s = State(na,nb,acc,k,self.charset)
+      print('\n'.join([
+        '{:10s} {}'.format(i,j)
+        for i,j in (
+          ('Self',self),
+          ('Parent',s),
+          ('Recovered',s.child(k)),
+          )
+        ]))
+      if self == s.child(k):
+        yield State(na,nb,acc,k,self.charset)
       else:
         print('Noes !')
 
@@ -96,9 +146,13 @@ def crack(hash,charset,lenmax):
   print('Charset : {}'.format(charset))
   print('Max acc : {}'.format(lenmax))
 
-  for last_acc in range(7,lenmax):
+  for last_acc in range(7+min(charset),lenmax):
     for key in charset:
       s = State(a,b,last_acc,key,charset)
+      print(s)
+      for i in s.parents():
+        print('Parent found : {}'.format(i))
+
 
 if __name__ == '__main__':
   import sys
