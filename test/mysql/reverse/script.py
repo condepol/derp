@@ -16,11 +16,12 @@ class State:
     self.k = k
     self.charset = charset
   def __str__(self):
-    return '\x1b[32m{:08x}\x1b[34m{:08x} \x1b[31m{:4x}\x1b[0m {:x}'.format(
+    return '{:>8s} \x1b[32m{:08x}\x1b[34m{:08x} \x1b[31m{:4x}\x1b[0m{}'.format(
+        self.k,
         self.a,
         self.b,
         self.c,
-        self.k)
+        'OMG' if self.is_initial() else '')
 
   def is_initial(self):
     if self.c == 7:
@@ -33,8 +34,7 @@ class State:
     if self.a == x.a:
       if self.b == x.b:
         if self.c == x.c:
-          if self.k == x.k:
-            return True
+          return True
     return False
 
   def child(self,k):
@@ -43,7 +43,7 @@ class State:
     a = ((a ^ (k* ((a&63) + c)) + (a<<8)) %(1<<32)) & 0x7fffffff
     b = ((((b<<8) ^ a) + b) %(1<<32)) & 0x7fffffff
     c += k
-    return State(a,b,c,k,self.charset)
+    return State(a,b,c,self.k,self.charset)
 
   def parents(self):
     for key in self.charset:
@@ -73,13 +73,13 @@ class State:
       # recover c
       # γδ = (d0)+z ^ cd
       # cd = γδ ^ (d0)+z
-      cd = pack(γ,δ) ^ (pack(d,0)+z)
+      cd = (pack(γ,δ) ^ (pack(d,0)+z)) % 0x10000
       assert(cd % 256 == d)
       c = (cd>>8)%256
       # recover b
       # βγδ = bcd ^ (cd0 + z)
       # bcd = βγδ ^ (cd0 + z)
-      bcd = pack(β,γ,δ) ^ (pack(c,d,0)+z)
+      bcd = (pack(β,γ,δ) ^ (pack(c,d,0)+z))%0x1000000
       assert(bcd % 0x10000 == cd)
       b = (bcd>>16)%256
       # αβγδ = abcd ^ (bcd0 + z)
@@ -125,19 +125,23 @@ class State:
       assert(efgh == nb)
 
       # check correctness of reverse
-      s = State(na,nb,acc,k,self.charset)
-      print('\n'.join([
-        '{:10s} {}'.format(i,j)
-        for i,j in (
-          ('Self',self),
-          ('Parent',s),
-          ('Recovered',s.child(k)),
-          )
-        ]))
+      s = State(na,nb,acc,chr(k)+self.k,self.charset)
+      #print('\n'.join([
+      #  '{:18s} {}'.format(i,j)
+      #  for i,j in (
+      #    ('Self',self),
+      #    ('Parent',s),
+      #    ('Recovered',s.child(k)),
+      #    )
+      #  ]))
       if self == s.child(k):
-        yield State(na,nb,acc,k,self.charset)
+        yield State(na,nb,acc,chr(k)+self.k,self.charset)
       else:
         print('Noes !')
+  def salmon(self):
+    for i in self.parents():
+      print(i)
+      i.salmon()
 
 def crack(hash,charset,lenmax):
   assert(len(hash) == 16)
@@ -148,22 +152,19 @@ def crack(hash,charset,lenmax):
 
   for last_acc in range(7+min(charset),lenmax):
     for key in charset:
-      s = State(a,b,last_acc,key,charset)
-      print(s)
-      for i in s.parents():
-        print('Parent found : {}'.format(i))
-
+      s = State(a,b,last_acc,chr(key),charset)
+      s.salmon()
 
 if __name__ == '__main__':
   import sys
   # ABCD
   hash = '086fecf00b799509' if len(sys.argv) < 2 else sys.argv[1]
   # protip : use « ÿ» for 0x20->0xff «\ ÿ» in a shell
-  charset = 'AD' if len(sys.argv) < 3 else sys.argv[2][:2]
+  charset = 'AB' if len(sys.argv) < 3 else sys.argv[2][:2]
   charset = bytes(range(ord(charset[0]),ord(charset[1])+1))
   # Number of characters max in the password to recover
   # This defines the size of the tree
-  lenmax  = 6 if len(sys.argv) < 4 else int(sys.argv[3])
+  lenmax  = 2 if len(sys.argv) < 4 else int(sys.argv[3])
   # final acc = 7 + sum(ord(letter) for letter in password)
   # thus, taking the max value of the charset give us the max bound :
   lenmax  = 7 + (max(charset) * lenmax)
