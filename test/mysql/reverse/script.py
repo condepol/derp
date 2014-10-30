@@ -140,8 +140,11 @@ class State:
         print('Noes !')
   def salmon(self):
     for i in self.parents():
-      print(i)
-      i.salmon()
+      if i.is_initial():
+        print(i.k)
+        sys.exit(0)
+      else:
+        i.salmon()
 
 def crack(hash,charset,lenmax):
   assert(len(hash) == 16)
@@ -150,10 +153,9 @@ def crack(hash,charset,lenmax):
   print('Charset : {}'.format(charset))
   print('Max acc : {}'.format(lenmax))
 
-  for last_acc in range(7+min(charset),lenmax):
-    for key in charset:
-      s = State(a,b,last_acc,chr(key),charset)
-      s.salmon()
+  for last_acc in range(lenmax,7+min(charset),-1):
+    s = State(a,b,last_acc,'',charset)
+    s.salmon()
 
 if __name__ == '__main__':
   import sys
