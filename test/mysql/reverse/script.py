@@ -141,9 +141,11 @@ class State:
   def salmon(self):
     for i in self.parents():
       if i.is_initial():
-        print(i.k)
+        print(i)
+        print('Cracked : «{}»'.format(i.k))
         sys.exit(0)
       else:
+        print(i)
         i.salmon()
 
 def crack(hash,charset,lenmax):
