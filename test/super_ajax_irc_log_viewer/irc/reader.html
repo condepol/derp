@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset=utf8 />
+    <title>Super AJAX IRC log viewer</title>
+    <style>
+.log {
+  font-family: monospace;
+  color: #ddd;
+}
+html, body, div {
+  background: #111;
+  width:100%;
+  height:100%;
+  margin:0px;
+  padding:0px;
+}
+.nick       {color: #cf8; padding-right:5px; padding-left:5px;}
+.timestamp  {color: #ccf;}
+.irc_msg    {color: #f88; font-weight: bold; padding-left:12px;}
+.user_msg   {color: white;}
+.irc_bold   {font-weight: bold;}
+.irc_nobold {font-weight: normal;}
+/* thanks hexchat :) */
+.irc_color_0  {color:#d3d7cf} /* 0 white */
+.irc_color_1  {color:#2e3436} /* 1 black */
+.irc_color_2  {color:#3465a4} /* 2 blue */
+.irc_color_3  {color:#4e9a06} /* 3 green */
+.irc_color_4  {color:#cc0000} /* 4 red */
+.irc_color_5  {color:#8f3902} /* 5 light red */
+.irc_color_6  {color:#5c3566} /* 6 purple */
+.irc_color_7  {color:#ce5c00} /* 7 orange */
+.irc_color_8  {color:#c4a000} /* 8 yellow */
+.irc_color_9  {color:#73d216} /* 9 green */
+.irc_color_10 {color:#11a879} /* 10 aqua */
+.irc_color_11 {color:#58a19d} /* 11 light aqua */
+.irc_color_12 {color:#57799e} /* 12 blue */
+.irc_color_13 {color:#a0d462} /* 13 light purple */
+.irc_color_14 {color:#555753} /* 14 grey */
+.irc_color_15 {color:#888a85} /* 15 light grey */
+.irc_color_16 {color:#d3d7cf} /* 16 white */
+.irc_color_17 {color:#2e3436} /* 17 black */
+.irc_color_18 {color:#3465a4} /* 18 blue */
+.irc_color_19 {color:#4e9a06} /* 19 green */
+.irc_color_20 {color:#cc0000} /* 20 red */
+.irc_color_21 {color:#8f3902} /* 21 light red */
+.irc_color_22 {color:#5c3566} /* 22 purple */
+.irc_color_23 {color:#ce5c00} /* 23 orange */
+.irc_color_24 {color:#c4a000} /* 24 yellow */
+.irc_color_25 {color:#73d216} /* 25 green */
+.irc_color_26 {color:#11a879} /* 26 aqua */
+.irc_color_27 {color:#58a19d} /* 27 light aqua */
+.irc_color_28 {color:#57799e} /* 28 blue */
+.irc_color_29 {color:#a0d462} /* 29 light purple */
+.irc_color_30 {color:#555753} /* 30 grey */
+.irc_color_31 {color:#888a85} /* 31 light grey */
+    </style>
+  <script>
+var logfile_url = 'ii/irc.freenode.net/%23naohack/out'; // relative web path
+var interval = 3000; // between polls
+var offset = 0; // used for HTTP Range: 206 Partial content
+var bold_switch = 0; // ask knuth.
+var log = document.getElementById("log_window");
+
+function init () {
+  log = document.getElementById("log_window");
+  log.appendChild(document.createTextNode("Initialisation du lecteur de "));
+  var a = document.createElement('a');
+  a.href = logfile_url;
+  a.appendChild(document.createTextNode(logfile_url));
+  log.appendChild(a);
+  log.appendChild(document.createElement("br"));
+  setTimeout(refresh_log_file,0);
+}
+
+function add_element(type,message) {
+  var span = document.createElement('span');
+  span.setAttribute('class',type);
+  var text = document.createTextNode(message);
+  span.appendChild(text);
+  log.appendChild(span);
+}
+
+function add_message(message) {
+  var span = document.createElement('span');
+  span.setAttribute('class','user_msg');
+  // iterate over non-special characters
+  var child = recursive_message_parsing(message);
+  span.appendChild(child);
+  log.appendChild(span)
+}
+function recursive_message_parsing(message) {
+  var text = '';
+  var span = document.createElement('span');
+  for (var i = 0;i<message.length;i++) {
+    var cc = message.charCodeAt(i);
+    if (cc == 2) {
+      // bold
+      if (bold_switch) {
+        span.setAttribute('class','irc_bold');
+      } else {
+        span.setAttribute('class','irc_nobold');
+      }
+      bold_switch = ! bold_switch;
+      span.appendChild(document.createTextNode(text));
+      span.appendChild(recursive_message_parsing(message.slice(i+1)));
+      return span;
+    } else {
+      if (cc == 3) {
+        // color
+        color_array = message.slice(i+1).match(/[0-9]*/);
+        if (color_array.length > 0) {
+          // if there is a color code after the \x03
+          span.setAttribute('class','irc_color_'+color_array[0]);
+          span.appendChild(document.createTextNode(text));
+          span.appendChild(recursive_message_parsing(message.slice(i+1+color_array[0].length)));
+          return span;
+        } else {
+          // act as normal, but drop the \x03
+        }
+      } else {
+        text += message.slice(i,i+1);
+      }
+    }
+  }
+  span.appendChild(document.createTextNode(message));
+  return span;
+}
+function parse_content () {
+  // if the answer contains data
+  if (this.status == 206) {
+    offset += this.responseText.length;
+    // split lines, drop garbage
+    log_file_lines = this.responseText.match(/2014[^\r\n]+/g);
+    if (log_file_lines) {
+      // add lines to bottom
+      log_file_length = log_file_lines.length;
+      for (var i = 0; i < log_file_length; i++) {
+        // read the timestamp
+        add_element('timestamp',log_file_lines[i].slice(0,16))
+        // read the text
+        var payload = log_file_lines[i].slice(17);
+        var nick = payload.split('>',2);
+        // if there is a <nick>
+        if (nick.length == 2) {
+          // store the <nick>
+          add_element('nick',nick[0].slice(1));
+          // store the message
+          add_message(payload.slice(nick.length+7));
+        } else {
+          // else it's a message
+          add_element('irc_msg', log_file_lines[i].slice(17));
+        }
+        // anyway, new line
+        log.appendChild(document.createElement("br"));
+      }
+    }
+    // finally, scroll to bottom
+    window.scrollTo(0,document.body.scrollHeight);
+  } else {
+    //console.log(this.status);
+  }
+  // wait x ms
+  setTimeout(refresh_log_file,interval);
+}
+function refresh_log_file () {
+  var ajax = new XMLHttpRequest();
+  ajax.onload = parse_content;
+  ajax.open("get", logfile_url, true);
+  ajax.setRequestHeader('Range','bytes='+offset.toString()+'-');
+  ajax.send();
+}
+  </script>
+  </head>
+  <body>
+    <div id="log_window" class="log"></div>
+  <script>window.onload = init;</script>
+  </body>
+</html>
