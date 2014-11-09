@@ -58,7 +58,7 @@ html, body, div {
   <script>
 //var logfile_url = 'ii/irc.freenode.net/%23naohack/out'; // relative web path
 var logfile_url = 'live_demo.log'; // relative web path
-var interval = 3000; // between polls
+var interval = 7000; // between polls
 var offset = 0; // used for HTTP Range: 206 Partial content
 var bold_switch = 1; // ask knuth.
 var log = document.getElementById("log_window");
@@ -138,10 +138,21 @@ function recursive_message_parsing(message) {
   }
   return document.createTextNode(message);
 }
+function byteCount(s) {
+      return encodeURI(s).split(/%..|./).length - 1;
+}
 function parse_content () {
   // if the answer contains data
   if (this.status == 206) {
-    offset += this.responseText.length;
+    // try to read the length of server response with headers
+    var headers = this.getAllResponseHeaders().match(/Content-Length:[^\r\n]*/g);
+    if (headers.length != 0) {
+      console.log(parseInt(headers[0].split(':')[1],10));
+      offset += parseInt(headers[0].split(':')[1],10);
+    } else {
+      // fallback to response.length :/
+      offset += this.response.length;
+    }
     // split lines, drop garbage
     log_file_lines = this.responseText.match(/2014[^\r\n]+/g);
     if (log_file_lines) {
