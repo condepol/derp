@@ -58,7 +58,7 @@ html, body, div {
   <script>
 //var logfile_url = 'ii/irc.freenode.net/%23naohack/out'; // relative web path
 var logfile_url = 'live_demo.log'; // relative web path
-var interval = 7000; // between polls
+var interval = 3000; // between polls
 var offset = 0; // used for HTTP Range: 206 Partial content
 var bold_switch = 1; // ask knuth.
 var log = document.getElementById("log_window");
@@ -137,9 +137,6 @@ function recursive_message_parsing(message) {
     }
   }
   return document.createTextNode(message);
-}
-function byteCount(s) {
-      return encodeURI(s).split(/%..|./).length - 1;
 }
 function parse_content () {
   // if the answer contains data
