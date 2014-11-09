@@ -22,44 +22,45 @@ html, body, div {
 .irc_bold   {font-weight: bold;}
 .irc_nobold {font-weight: normal;}
 /* thanks hexchat :) */
-.irc_color_0  {color:#d3d7cf} /* 0 white */
-.irc_color_1  {color:#2e3436} /* 1 black */
-.irc_color_2  {color:#3465a4} /* 2 blue */
-.irc_color_3  {color:#4e9a06} /* 3 green */
-.irc_color_4  {color:#cc0000} /* 4 red */
-.irc_color_5  {color:#8f3902} /* 5 light red */
-.irc_color_6  {color:#5c3566} /* 6 purple */
-.irc_color_7  {color:#ce5c00} /* 7 orange */
-.irc_color_8  {color:#c4a000} /* 8 yellow */
-.irc_color_9  {color:#73d216} /* 9 green */
-.irc_color_10 {color:#11a879} /* 10 aqua */
-.irc_color_11 {color:#58a19d} /* 11 light aqua */
-.irc_color_12 {color:#57799e} /* 12 blue */
-.irc_color_13 {color:#a0d462} /* 13 light purple */
-.irc_color_14 {color:#555753} /* 14 grey */
-.irc_color_15 {color:#888a85} /* 15 light grey */
-.irc_color_16 {color:#d3d7cf} /* 16 white */
-.irc_color_17 {color:#2e3436} /* 17 black */
-.irc_color_18 {color:#3465a4} /* 18 blue */
-.irc_color_19 {color:#4e9a06} /* 19 green */
-.irc_color_20 {color:#cc0000} /* 20 red */
-.irc_color_21 {color:#8f3902} /* 21 light red */
-.irc_color_22 {color:#5c3566} /* 22 purple */
-.irc_color_23 {color:#ce5c00} /* 23 orange */
-.irc_color_24 {color:#c4a000} /* 24 yellow */
-.irc_color_25 {color:#73d216} /* 25 green */
-.irc_color_26 {color:#11a879} /* 26 aqua */
-.irc_color_27 {color:#58a19d} /* 27 light aqua */
-.irc_color_28 {color:#57799e} /* 28 blue */
-.irc_color_29 {color:#a0d462} /* 29 light purple */
-.irc_color_30 {color:#555753} /* 30 grey */
-.irc_color_31 {color:#888a85} /* 31 light grey */
+.ic_0  {color:#d3d7cf} .ib_0  {background:#d3d7cf} /* 0 white */
+.ic_1  {color:#2e3436} .ib_1  {background:#2e3436} /* 1 black */
+.ic_2  {color:#3465a4} .ib_2  {background:#3465a4} /* 2 blue */
+.ic_3  {color:#4e9a06} .ib_3  {background:#4e9a06} /* 3 green */
+.ic_4  {color:#cc0000} .ib_4  {background:#cc0000} /* 4 red */
+.ic_5  {color:#8f3902} .ib_5  {background:#8f3902} /* 5 light red */
+.ic_6  {color:#5c3566} .ib_6  {background:#5c3566} /* 6 purple */
+.ic_7  {color:#ce5c00} .ib_7  {background:#ce5c00} /* 7 orange */
+.ic_8  {color:#c4a000} .ib_8  {background:#c4a000} /* 8 yellow */
+.ic_9  {color:#73d216} .ib_9  {background:#73d216} /* 9 green */
+.ic_10 {color:#11a879} .ib_10 {background:#11a879} /* 10 aqua */
+.ic_11 {color:#58a19d} .ib_11 {background:#58a19d} /* 11 light aqua */
+.ic_12 {color:#57799e} .ib_12 {background:#57799e} /* 12 blue */
+.ic_13 {color:#a0d462} .ib_13 {background:#a0d462} /* 13 light purple */
+.ic_14 {color:#555753} .ib_14 {background:#555753} /* 14 grey */
+.ic_15 {color:#888a85} .ib_15 {background:#888a85} /* 15 light grey */
+.ic_16 {color:#d3d7cf} .ib_16 {background:#d3d7cf} /* 16 white */
+.ic_17 {color:#2e3436} .ib_17 {background:#2e3436} /* 17 black */
+.ic_18 {color:#3465a4} .ib_18 {background:#3465a4} /* 18 blue */
+.ic_19 {color:#4e9a06} .ib_19 {background:#4e9a06} /* 19 green */
+.ic_20 {color:#cc0000} .ib_20 {background:#cc0000} /* 20 red */
+.ic_21 {color:#8f3902} .ib_21 {background:#8f3902} /* 21 light red */
+.ic_22 {color:#5c3566} .ib_22 {background:#5c3566} /* 22 purple */
+.ic_23 {color:#ce5c00} .ib_23 {background:#ce5c00} /* 23 orange */
+.ic_24 {color:#c4a000} .ib_24 {background:#c4a000} /* 24 yellow */
+.ic_25 {color:#73d216} .ib_25 {background:#73d216} /* 25 green */
+.ic_26 {color:#11a879} .ib_26 {background:#11a879} /* 26 aqua */
+.ic_27 {color:#58a19d} .ib_27 {background:#58a19d} /* 27 light aqua */
+.ic_28 {color:#57799e} .ib_28 {background:#57799e} /* 28 blue */
+.ic_29 {color:#a0d462} .ib_29 {background:#a0d462} /* 29 light purple */
+.ic_30 {color:#555753} .ib_30 {background:#555753} /* 30 grey */
+.ic_31 {color:#888a85} .ib_31 {background:#888a85} /* 31 light grey */
     </style>
   <script>
-var logfile_url = 'ii/irc.freenode.net/%23naohack/out'; // relative web path
+//var logfile_url = 'ii/irc.freenode.net/%23naohack/out'; // relative web path
+var logfile_url = 'live_demo.log'; // relative web path
 var interval = 3000; // between polls
 var offset = 0; // used for HTTP Range: 206 Partial content
-var bold_switch = 0; // ask knuth.
+var bold_switch = 1; // ask knuth.
 var log = document.getElementById("log_window");
 
 function init () {
@@ -87,44 +88,55 @@ function add_message(message) {
   // iterate over non-special characters
   var child = recursive_message_parsing(message);
   span.appendChild(child);
-  log.appendChild(span)
+  log.appendChild(span);
+  bold_switch = 1;
 }
+
 function recursive_message_parsing(message) {
-  var text = '';
   var span = document.createElement('span');
   for (var i = 0;i<message.length;i++) {
     var cc = message.charCodeAt(i);
     if (cc == 2) {
       // bold
+
+      span_bold = document.createElement('span');
       if (bold_switch) {
-        span.setAttribute('class','irc_bold');
+        span_bold.setAttribute('class','irc_bold');
       } else {
-        span.setAttribute('class','irc_nobold');
+        span_bold.setAttribute('class','irc_nobold');
       }
       bold_switch = ! bold_switch;
-      span.appendChild(document.createTextNode(text));
-      span.appendChild(recursive_message_parsing(message.slice(i+1)));
+      span.appendChild(document.createTextNode(message.slice(0,i)));
+      span.appendChild(span_bold);
+      span_bold.appendChild(recursive_message_parsing(message.slice(i+1)));
       return span;
     } else {
       if (cc == 3) {
         // color
-        color_array = message.slice(i+1).match(/[0-9]*/);
+        color_array = message.slice(i+1).match(/[0-9,]*/);
         if (color_array.length > 0) {
           // if there is a color code after the \x03
-          span.setAttribute('class','irc_color_'+color_array[0]);
-          span.appendChild(document.createTextNode(text));
-          span.appendChild(recursive_message_parsing(message.slice(i+1+color_array[0].length)));
+          span.appendChild(document.createTextNode(message.slice(0,i)));
+          var span_color = document.createElement('span');
+          var split_comma = color_array[0].split(',');
+          if (split_comma.length > 1) {
+            span_color.setAttribute('class','ic_'+parseInt(split_comma[0],10)+' ib_'+parseInt(split_comma[1],10));
+          } else {
+            span_color.setAttribute('class','ic_'+parseInt(color_array[0],10));
+          }
+          span_color.appendChild(recursive_message_parsing(message.slice(i+1+color_array[0].length)));
+          span.appendChild(span_color);
           return span;
         } else {
+          console.log('Failed to parse color : ',cc,message);
           // act as normal, but drop the \x03
         }
       } else {
-        text += message.slice(i,i+1);
+        // normal character, do nothing (previously, add letter to var text, but var text replaced by .slice(0,i), no need to store letters)
       }
     }
   }
-  span.appendChild(document.createTextNode(message));
-  return span;
+  return document.createTextNode(message);
 }
 function parse_content () {
   // if the answer contains data
@@ -146,7 +158,7 @@ function parse_content () {
           // store the <nick>
           add_element('nick',nick[0].slice(1));
           // store the message
-          add_message(payload.slice(nick.length+7));
+          add_message(payload.slice(nick[0].slice(1).length + 3));
         } else {
           // else it's a message
           add_element('irc_msg', log_file_lines[i].slice(17));
