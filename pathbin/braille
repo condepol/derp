@@ -25,5 +25,5 @@ except:
 if label.strip() == '': label='lol'
 
 tt="/tmp/a.png"
-os.system('convert -background white -font {} -pointsize {:d} label:"{}" {}; /home/antoine/test/uniqueode_draw/bitmap_to_braille.py {}'.format(font,ps,label,tt,tt))
+os.system('convert -background white -font {} -pointsize {:d} label:"{}" {}; ~/test/uniqueode_draw/bitmap_to_braille.py {}'.format(font,ps,label,tt,tt))
 
