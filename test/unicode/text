@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+import os
+import re
+import sys
+import random
+
+print('Bulding ~/path')
+db_path = os.path.join(os.path.expanduser('~'),'unicode.txt') # ~/unicode.txt
+print('Reading database..')
+with open(db_path) as ofi: database = [i.strip() for i in ofi.readlines()]
+print('Identifying syllabes..')
+memo = {}
+
+def get_symbols(syllabe):
+  for i in database:
+    x = re.match('.* {} .$'.format(syllabe.upper()),i)
+    if x is not None:
+      if memo.get(syllabe) is None:
+        memo[syllabe] = [i]
+      else:
+        memo[syllabe].append(i)
+  if memo.get(syllabe) is None:
+    print('No syllabe for {}'.format(syllabe.upper()))
+    sys.exit(0)
+
+# fill memoizer
+for syllabe in sys.argv[1:]:
+  get_symbols(syllabe.upper())
+
+# filter sexy characters
+for s in memo:
+  print('Select cool characters for {}'.format(s))
+  print('\n'.join(['{:3d} : {}'.format(i,memo[s][i]) for i in range(len(memo[s]))]))
+  digits = input('Indexes> ').strip()
+  if len(digits) == 0:
+    digits = range(len(memo[s]))
+  else:
+    digits = [int(digits)] if ' ' not in digits else [int(i) for i in digits.split(' ')]
+  memo[s] = ''.join([memo[s][d][-1] for d in digits])
+
+# print random swaps
+for i in range(10):
+  print(''.join([random.choice(memo[s.upper()]) for s in sys.argv[1:]]))

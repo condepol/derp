@@ -164,11 +164,11 @@ if __name__ == '__main__':
   # ABCD
   hash = '086fecf00b799509' if len(sys.argv) < 2 else sys.argv[1]
   # protip : use « ÿ» for 0x20->0xff «\ ÿ» in a shell
-  charset = 'AB' if len(sys.argv) < 3 else sys.argv[2][:2]
+  charset = 'AD' if len(sys.argv) < 3 else sys.argv[2][:2]
   charset = bytes(range(ord(charset[0]),ord(charset[1])+1))
   # Number of characters max in the password to recover
   # This defines the size of the tree
-  lenmax  = 2 if len(sys.argv) < 4 else int(sys.argv[3])
+  lenmax  = 4 if len(sys.argv) < 4 else int(sys.argv[3])
   # final acc = 7 + sum(ord(letter) for letter in password)
   # thus, taking the max value of the charset give us the max bound :
   lenmax  = 7 + (max(charset) * lenmax)
