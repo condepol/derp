@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+# print occurences of characters in stdin, ordered by codepoint.
+
+import sys
+import unicodedata
+
+def name(char):
+  try:
+    return unicodedata.name(char)
+  except:
+    return 'MISSINGNO'
+
+stdin = sys.stdin.read()
+counts = {}
+codepoints = []
+for char in stdin:
+  if counts.get(ord(char)) is None:
+    counts[ord(char)] = stdin.count(char)
+    codepoints.append(ord(char))
+
+codepoints.sort()
+
+print(
+  "\n".join(
+    [
+      "{:3d} {:6x} {:1s} {} {}".format(
+        counts[codepoint],
+        codepoint,
+        "".join(
+          [
+            "{:02x}".format(i)
+          for i in bytes(chr(codepoint),"utf8")
+          ]
+        ),
+        name(chr(codepoint)),
+        chr(codepoint),
+      )
+    for codepoint in codepoints
+    ]
+  )
+)

@@ -1,8 +1,6 @@
-#!/usr/bin/env python2.7
-# coding: utf-8
+#!/usr/bin/env python3
 # Top BL Spawn
 # (some) Novell network default password generation
-
 import sys
 
 table = {
@@ -35,12 +33,12 @@ def passfrom(prenom,nom):
   number = str(len(prenom)*len(nom)).ljust(3,'0')
   return login,prefix+number
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   if len(sys.argv) != 3:
-    print "Usage :",sys.argv[0],"<prénom> <nom>"
+    print('Usage : {} <prénom> <nom>'.format(sys.argv[0]))
     sys.exit(0)
-
   login,password = passfrom(sys.argv[1],sys.argv[2])
-
-  print "login   : ",login
-  print "password: ",password
+  print('\n'.join([
+    '{:15s}: {}'.format('login',login),
+    '{:15s}: {}'.format('password',password),
+    ]))
