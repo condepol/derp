@@ -7,6 +7,15 @@
 #
 # http://www.slideshare.net/MalteLandwehr/slideshare-download <- easy .swf slides.
 # http://www.slideshare.net/BobRadvanovsky/project-shine-findings-report-dated-1oct2014 <- mysterious '.ssd' file, todo
+#
+# this > http://paste.atilla.org/cu9zbqI&ln
+##!/bin/bash
+##XML=`curl $1 | grep 'meta name="thumbnail"' | sed -r -e 's/.*content="(.+?)".*/\1/' -e 's/ss_thumbnails\///' -e 's/(.+phpapp[0-9]+).+/\1.xml/'`
+##SLIDES=`curl "$XML" | sed 's/>/>\n/g' | grep 'Src="' | sed -r -e 's/.*Src="(.+?)".*/\1/g'`
+##for SLIDE in $SLIDES; do
+##        wget $SLIDE
+##done
+
 
 import os
 import sys
