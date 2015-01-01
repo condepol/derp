@@ -44,8 +44,16 @@ class Ipfile:
       self.ips = [Ip(i) for i in o.readlines()]
 
 if __name__ == '__main__':
-  if len(sys.argv) != 3:
-    print('Usage : {} ips ranges'.format(self.argv[0]))
+  if len(sys.argv) < 3:
+    print('Usage : {} ips.txt ranges.txt 2> out_of_scope.txt > in_scope.txt'.format(sys.argv[0]))
+    sys.exit(0)
+
+  if len(sys.argv) == 4:
+    out = '\x1b[32m{}\x1b[0m\n'
+    err = '\x1b[31m{}\x1b[0m\n'
+  else:
+    out,err = '{}\n','{}\n'
+
   i = Ipfile(sys.argv[1])
   r = Rangefile(sys.argv[2])
   for ip in i.ips:
@@ -54,6 +62,6 @@ if __name__ == '__main__':
       if iprange.contains(ip):
         in_scope = True
     if in_scope:
-      sys.stdout.write('\x1b[32m{}\x1b[0m\n'.format(ip))
+      sys.stdout.write(out.format(ip))
     else:
-      sys.stderr.write('\x1b[31m{}\x1b[0m\n'.format(ip))
+      sys.stderr.write(err.format(ip))
