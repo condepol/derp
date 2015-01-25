@@ -5,7 +5,7 @@
 # include <sys/stat.h>
 # include <sys/types.h>
 
-# define BUFFAH_SIZE 64
+# define BUFFAH_SIZE 32
 
 unsigned char hexa(unsigned char x){return (x+0x30)+((x>9)*0x27);}
 unsigned char ch1(unsigned char x){if((x>0x1f)&&(x<0x7f)){return 32;}else{return hexa(x>>4);}}
