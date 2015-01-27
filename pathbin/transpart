@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+import sys
+import subprocess
+
+if __name__ == '__main__':
+  torrent_id = int(sys.argv[1])
+  output = str(subprocess.check_output(['transmission-remote','-t',str(torrent_id),'-ic']),'ascii')
+  acc = 0
+  counter = 0
+  for i in range(len(output)):
+    char = output[i]
+    if char in ['0','1']:
+      if char == '1':
+        acc += (1<<counter)
+      counter += 1
+      if counter == 8:
+        counter = 0
+        print(chr(0x2800+acc),end='')
+        acc = 0
+      
+  print()

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import sys,time,struct,codecs
-def S(t): return ''.join([[chr(byte) if (byte % 0x80) > 0x1f else '\x1b[31m{:02x}\x1b[0m'.format(byte)][0] for byte in struct.pack('>I',t)])
-def pr(t): print('{:30s} {:08x} {}'.format(time.strftime("%F %T %A",time.gmtime(t)),t,S(t)))
+def S(t): return ''.join([['{} '.format(chr(byte)) if (byte % 0x80) > 0x1f else '\x1b[31m{:02x}\x1b[0m'.format(byte)][0] for byte in struct.pack('>I',t)])
+def Z(t): return ''.join([(x if x != chr(0) else ' ') for x in str(struct.pack('>I',t),'cp437')])
+def pr(t): print('{:30s} {:08x} {}  {:8s}'.format(time.strftime("%F %T %A",time.gmtime(t)),t,Z(t),S(t)))
 def cases(s,t=0):
   if t == len(s):return [s]
   return [i for i in cases(s[:t]+s[t].upper()+s[t+1:],t+1)] + [i for i in cases(s[:t]+s[t].lower()+s[t+1:],t+1)]
