@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+from PIL import Image
+import sys
+
+def color(a,b):
+  return (
+    ((a[0] + b[0])%256),
+    ((a[1] + b[1])%256),
+    ((a[2] + b[2])%256),
+  )
+
+a = Image.open(sys.argv[1]).convert('RGB')
+b = Image.open(sys.argv[2]).convert('RGB')
+o = "output.png" if len(sys.argv) < 4 else sys.argv[3]
+
+c = Image.new('RGB',a.size,(255,255,255))
+
+w, h = a.size
+for i in range(w):
+  for j in range(h):
+    p = (i,j)
+    c.putpixel(p,color(a.getpixel(p),b.getpixel(p)))
+
+c.save(o)
