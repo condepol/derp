@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>webcam</title>
+    <style>
+    html,body{margin:0px;padding:0px;background:black;}
+    video {min-width:100%;max-height:100%;padding:0px;margin:0px;}
+    </style>
+  </head>
+  <body>
+    <video id="video"></video>
+    <script>
+(function() {
+  var video = document.querySelector('#video');
+  navigator.getMedia = ( navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia ||
+    navigator.msGetUserMedia);
+
+  navigator.getMedia({video: true,audio: false},
+    function(stream) {
+      if (navigator.mozGetUserMedia) { video.mozSrcObject = stream;
+      } else {
+        var vendorURL = window.URL || window.webkitURL;
+        video.src = vendorURL.createObjectURL(stream);
+      }
+      video.play();
+    },
+    function(err) {console.log("An error occured! " + err);}
+  );})();</script>
+  </body>
+</html>
