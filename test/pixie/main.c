@@ -2,6 +2,7 @@
 # include <stdint.h>
 # include <stdlib.h>
 # include <string.h>
+# include <arpa/inet.h>
 
 void error (const char * msg) {fprintf(stderr,"\x1b[31m[ ! ] %s\n\x1b[0m",msg);}
 void info  (const char * msg) {fprintf(stdout,"\x1b[34m[ + ] %s\n\x1b[0m",msg);}
@@ -48,6 +49,18 @@ typedef struct llc_s {
   uint16_t type;
 } llc_t;
 
+typedef struct auth802_s {
+  uint8_t version;
+  uint8_t type;
+  uint16_t length;
+} auth802_t;
+
+typedef struct eap_hdr_s {
+  uint8_t type;
+  uint8_t id;
+  uint16_t size;
+} eap_hdr_t;
+
 void debug_info_file_header( pcap_hdr_t * hdr ) {
   debug("cap header content :");
   printf("%30s %8x\n","magic number"             , hdr->magic_number);  
@@ -91,36 +104,60 @@ void debug_info_packet_header_80211( pkt_hdr_80211_t * h ) {
   type = h->type & 0xff;
   type = ((type & 0xc) << 2) + (type >> 4);
 
-  printf("\x1b[36m[ type %02x ]\x1b[0m to ",type);
+  printf("\x1b[36m[ type %02x ]\x1b[0m > ",type);
   print_mac(&h->dst_mac);
 }
 
 void debug_info_packet_header_80211_sender ( pkt_hdr_80211_sender_t * h ) {
-  printf(" from ");
+  printf(" < ");
   print_mac(&h->src_mac);
   printf(" bss ");
   print_mac(&h->bss_mac);
   printf(" %4x",h->sequence);
 }
 
-void debug_into_llc( llc_t * llc ){
+void debug_info_llc( llc_t * llc ){
   printf("%02x %02x %02x",llc->dsap,llc->snap,llc->control);
   printf(" type %04x",llc->type);
-
 }
+
+void debug_info_8021_auth ( auth802_t * h ){
+  switch (h->type) {
+    case 0: printf(" %d bytes",h->length); break;
+    case 1: printf(" \x1b[35mEAP Start\x1b[0m"); break;
+    case 2: printf(" Unkown EAP 2"); break;
+    case 3: printf(" \x1b[32m\x1b[1mKEY §§\x1b[0m %d bytes",h->length); break;
+    default: printf(" Unkown EAP %x",h->type);
+  }
+}
+
+void debug_info_eap_header ( eap_hdr_t * h ) {
+  printf(" EAP");
+  switch (h->type) {
+    case 1: printf(" \x1b[34mRequest \x1b[0m"); break;
+    case 2: printf(" \x1b[32mResponse\x1b[0m"); break;
+    case 4: printf(" \x1b[31mFailure \x1b[0m"); break;
+    default: ;
+  }
+  printf(" %d %d",h->id,h->size);
+}
+
 int main(int argc, char * argv []) {
   FILE * fp = NULL;
   size_t read_size = 0;
   pcap_hdr_t cap_header;
   pcaprec_hdr_t packet_header;
-  unsigned int index = 0;
+  unsigned int index = 1;
   pkt_hdr_80211_t packet_header_80211;
   pkt_hdr_80211_sender_t packet_header_80211_sender;
   llc_t packet_header_llc;
+  auth802_t packet_header_8021_authentication;
+  eap_hdr_t packet_eap_header;
   long next_packet = 0;
+  unsigned int debug = 0;
 
   /* 1. read input .cap */
-  if (argc != 2) {
+  if (argc < 2) {
     info("Usage : ./pixie <capture.cap>");
     return 1;
   } else {
@@ -137,6 +174,14 @@ int main(int argc, char * argv []) {
     }
   }
   
+  if (argc > 2) {
+    if (strcmp(argv[2],"debug") == 0) {
+      debug = 1;
+    } else {
+      debug = 0;
+    }
+  }
+
   /* 2.1 read .cap header */
   read_size = fread(&cap_header,sizeof(pcap_hdr_t),1,fp);
   if (read_size != 1) {
@@ -144,7 +189,7 @@ int main(int argc, char * argv []) {
     fclose(fp);
     return 1;
   }
-  debug_info_file_header(&cap_header);
+  if (debug) {debug_info_file_header(&cap_header);}
 
   if (cap_header.network != 0x69) {
     error(".cap file is not Wi-Fi !");
@@ -158,49 +203,56 @@ int main(int argc, char * argv []) {
     fread(&packet_header,sizeof(pcaprec_hdr_t),1,fp);
     if (feof(fp)) {break;}
     next_packet = packet_header.incl_len + ftell(fp);
-    debug_info_packet_header (&packet_header, index);
+    if (debug) {debug_info_packet_header (&packet_header, index);}
+    /* read 802.11 header */
     fread(&packet_header_80211,sizeof(pkt_hdr_80211_t),1,fp);
+    if (feof(fp)) {break;}
+
     /* It may be a retransmission, we don't care */
     if (packet_header_80211.flags == 0x08) {
-      printf("\x1b[35mretransmission");
+      if (debug) {printf("\x1b[35mretransmission");}
     } else {
       /* It may be a lot of stuff we don't even want to know */
-      if (packet_header_80211.type == 0xd4) {
-        printf("\x1b[35macknowledgement");
-      } else {
-        if ((packet_header_80211.type == 0x50) || packet_header_80211.type == 0x40) {
-          printf("\x1b[35mprobe"); /* todo, maybe, ssid printf */
-          if (packet_header_80211.type == 0x50) {
-            printf(" \x1b[31mresponse");
-          } else {
-            printf(" \x1b[32mrequest");
-          }
-        } else {
-          if (feof(fp)) {break;}
-          debug_info_packet_header_80211(&packet_header_80211);
+      switch (packet_header_80211.type) {
+        case 0xd4: if (debug) {printf("\x1b[35mack");}  break;
+        case 0x50: if (debug) {printf("\x1b[31mresponse");}        break;
+        case 0x40: if (debug) {printf("\x1b[35mprobe");} break; /* todo, maybe, ssid printf */
+        case 0xc4: if (debug) {printf("\x1b[35mclear to send\x1b[0m");} break;
+        case 0x80: if (debug) {printf("\x1b[36mbeacon\x1b[0m");} break; /* todo, maybe print info */
+        case 0x00: if (debug) {printf("\x1b[36massociation \x1b[32mrequest\x1b[0m");} break; /* todo, maybe print info */
+        case 0x10: if (debug) {printf("\x1b[36massociation \x1b[31mresponse\x1b[0m");} break; /* todo, maybe print info */
+        case 0xb0: if (debug) {printf("\x1b[32mauth\x1b[0m");}
+        default :
+          if (debug) {debug_info_packet_header_80211(&packet_header_80211);}
   
           /* 2.2 it may contain info about sender */
           if ((packet_header_80211.type & 4) == 0) {
             fread(&packet_header_80211_sender,sizeof(pkt_hdr_80211_sender_t),1,fp);
             if (feof(fp)) {break;}
-            debug_info_packet_header_80211_sender(&packet_header_80211_sender);
+            if (debug) {debug_info_packet_header_80211_sender(&packet_header_80211_sender);}
 
             /* It can be a data frame :D */
             if (packet_header_80211.type == 8) {
               /* read LLC */
               fread(&packet_header_llc,sizeof(llc_t),1,fp);
               if (feof(fp)) {break;}
-              // debug_into_llc(&packet_header_llc);
-              if (packet_header_llc.type == 0x8e88) {
-                printf(" \x1b[32m\x1b[1mauthentication :D");
+              // debug_info_llc(&packet_header_llc);
+              // todo : endianness :)
+              if (ntohs(packet_header_llc.type) == 0x888e) {
+                // if (debug) {printf(" \x1b[32m\x1b[1mauthentication :D");}
+                fread(&packet_header_8021_authentication,sizeof(auth802_t),1,fp);
+                if (feof(fp)) {break;}
+                if (debug) {debug_info_8021_auth(&packet_header_8021_authentication);}
+                fread(&packet_eap_header,sizeof(eap_hdr_t),1,fp);
+                if (feof(fp)) {break;}
+                if (debug) {debug_info_eap_header(&packet_eap_header);}
               }
             }
           }
         }
-      }
     }
 
-    printf("\x1b[0m\n");
+    if (debug) {printf("\x1b[0m\n");}
 
 
     /* then go to next packet */
