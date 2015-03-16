@@ -38,4 +38,6 @@ do
   done
 done
 
-
+echo
+echo "Please post this information on this thread : http://www.crack-wifi.com/forum/topic-11198-pixie-dust-attack-participez-a-la-recherche-avec-vos-echantillons.html"
+echo "Thanks !"
