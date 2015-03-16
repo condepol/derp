@@ -33,7 +33,7 @@ for w in "Client" "AP";
 do
   for i in "wps.manufacturer" "wps.device_name" "wps.os_version" "wlan.ta" "wps.model_name" "wps.model_number" "wps.serial_number";
   do 
-    x=$(tshark -r wpsdata.cap -Y "(wlan.fc.ds == $(name ${w})) and (llc.type == 0x888e)" -e ${i} -Tfields -Eoccurrence=a -Equote=n | grep -v ^$ | sort -u | tr -d '\n')
+    x=$(tshark -r $1 -Y "(wlan.fc.ds == $(name ${w})) and (llc.type == 0x888e)" -e ${i} -Tfields -Eoccurrence=a -Equote=n | grep -v ^$ | sort -u | tr -d '\n')
     printf "%-25s : %s\n" "${w} ${i}" "${x}";
   done
 done
